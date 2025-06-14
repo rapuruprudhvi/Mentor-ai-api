@@ -26,3 +26,10 @@ export const signupSchema = z
   });
 
 export type SignupInput = z.infer<typeof signupSchema>;
+
+export const signinSchema = z.object({
+  identifier: z.string().min(5),
+  password: z.string().min(6),
+});
+
+export type SigninInput = z.infer<typeof signinSchema>;

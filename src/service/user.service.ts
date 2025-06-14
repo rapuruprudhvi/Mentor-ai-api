@@ -24,3 +24,23 @@ export const createUser = async (
 
   return await userRepo.save(user);
 };
+
+export const findUserByIdentifier = async (identifier: string): Promise<User> => {
+  const userRepo = AppDataSource.getRepository(User);
+  const user = await userRepo.findOne({
+    where: [{ email: identifier }, { name: identifier }],
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  return user;
+};
+
+export const validatePassword = async (
+  rawPassword: string,
+  hashedPassword: string
+): Promise<boolean> => {
+  return bcrypt.compare(rawPassword, hashedPassword);
+};
