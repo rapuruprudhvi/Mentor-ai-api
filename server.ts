@@ -1,6 +1,8 @@
 import * as dotenv from 'dotenv';
 import { AppDataSource } from './src/config/database';
 import { createApp } from './src/app';
+import { DataSource } from 'typeorm';
+import Container from 'typedi';
 
 dotenv.config();
 
@@ -10,6 +12,7 @@ const startServer = async () => {
   try {
     await AppDataSource.initialize();
     console.log('✅ Database connected successfully');
+    Container.set(DataSource, AppDataSource);
 
     const app = createApp();
 

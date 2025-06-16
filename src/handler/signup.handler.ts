@@ -1,32 +1,47 @@
 import { NextFunction, Request, Response } from 'express';
 import { generateToken } from '../utils/jwt.utils';
-import { SignupInput, signupSchema } from '../validation/auth.validation';
-import { createUser } from '../service/user.service';
-import { SignupResponse } from '../types/auth.types';
+import { SignupResponse, signupSchema } from '../validation/auth.validation';
+import { UserService } from '../service/user.service';
+import { Injectable } from '../decorator/injectable.decorator';
+import { RouteHandler } from '../types/handler';
+import { ApiResponse } from '../types/api.responce';
 
-export const signupHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const parsed: SignupInput = signupSchema.parse(req.body);
-    const { name, email, password } = parsed;
+@Injectable()
+export class SignupHandler implements RouteHandler {
+  constructor(private readonly userService: UserService) {}
 
-    const user = await createUser(name, email, password);
-    const token = generateToken({ id: user.id, email: user.email });
+  async handle(req: Request, res: Response<ApiResponse<SignupResponse>>) {
+      const { error, data: body } = signupSchema.safeParse(req.body);
 
+      if (error) {
+        return res.status(400).json({
+          error: error.issues[0]?.message || 'Validation error',
+        });
+      }
 
-    const response: SignupResponse = {
-      message: 'Account created successfully',
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt.toISOString(),
-      },
-    };
+      const user = await this.userService.userSignUp(
+        body.name,
+        body.email,
+        body.mobileNumber,
+        body.password,
+        body.emailVerified,
+        body.mobileNumberVerified
+      );
 
-    res.status(201).json(response);
-  } catch (error) {
-    next(error);
-  }
+      const token = generateToken({ id: user.id, email: user.email });
+
+      const response: SignupResponse = {
+        message: 'User registered successfully',
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          mobileNumber: user.mobileNumber,
+          createdAt: user.createdAt?.toISOString(),
+        },
+      };
+
+      return res.status(201).json({ data: response });
+    } 
 }
-

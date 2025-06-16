@@ -1,3 +1,4 @@
+
 import { Entity, PrimaryColumn, Column, CreateDateColumn } from "typeorm";
 
 @Entity()
@@ -8,13 +9,22 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Column({ unique: true }) 
+  mobileNumber: string;
+
   @Column()
   password: string;
 
   @Column()
   name: string;
 
+  @Column({ default: false })
+  emailVerified: boolean;
+
+  @Column({ default: false })
+  mobileNumberVerified: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
-
 }
+

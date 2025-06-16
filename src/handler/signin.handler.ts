@@ -1,38 +1,40 @@
-import { Request, Response, NextFunction } from 'express';
-import { signinSchema, SigninInput } from '../validation/auth.validation';
-import { findUserByIdentifier, validatePassword } from '../service/user.service';
-import { generateToken } from '../utils/jwt.utils';
+import { Request, Response, NextFunction } from "express";
+import { Injectable } from "../decorator/injectable.decorator";
+import { UserService } from "../service/user.service";
+import { ApiResponse } from "../types/api.responce";
+import { RouteHandler } from "../types/handler";
+import { generateToken } from "../utils/jwt.utils";
+import { signinSchema } from "../validation/auth.validation";
 
-export const signinHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const parsed: SigninInput = signinSchema.parse(req.body);
-    const { identifier, password } = parsed;
+@Injectable()
+export class SigninHandler implements RouteHandler {
+  constructor(private readonly userService: UserService) { }
+  async handle(
+    req: Request,
+    res: Response<ApiResponse<{ token: string }>>,) {
+    const { error, data: body } = signinSchema.safeParse(req.body);
 
-    const user = await findUserByIdentifier(identifier);
-    if (!user) {
-      res.status(400).json({ message: 'Invalid credentials' });
+    if (error) {
+      res.status(400).json({
+        error: error.issues[0]?.message || 'Validation error',
+      });
       return;
     }
 
-    const isValid = await validatePassword(password, user.password);
-    if (!isValid) {
-      res.status(400).json({ message: 'Invalid credentials' });
+    const user = await this.userService.userSignIn(body.identifier, body.password);
+
+    if (!user) {
+      res.status(400).json({
+        error: 'Invalid credentials',
+      });
       return;
     }
 
     const token = generateToken({ id: user.id, email: user.email });
 
     res.status(200).json({
-      message: 'Signin successful',
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt.toISOString(),
-      },
+      data: { token },
     });
-  } catch (err) {
-    next(err);
+
   }
-};
+}

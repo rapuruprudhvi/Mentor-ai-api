@@ -1,11 +1,15 @@
 import { Router } from 'express';
-import { signupHandler } from '../handler/signup.handler';
-import { signinHandler } from '../handler/signin.handler';
+import { resolveRouteHandler } from '../utils/handler.utils';
+import { SignoutHandler } from '../handler/Signout.handler';
+import { SignupHandler } from '../handler/signup.handler';
+import { SigninHandler } from '../handler/signin.handler';
+import { PassportAuthMiddleware } from '../middleware/auth.middleware';
 
 
-const userrouter = Router();
-userrouter.post('/signup', signupHandler);
-userrouter.post('/signin', signinHandler);
+const userrouter = Router({ mergeParams: true });
 
+userrouter.post('/signup', resolveRouteHandler(SignupHandler));
+userrouter.post('/signin', resolveRouteHandler(SigninHandler));
+userrouter.post("/signout", resolveRouteHandler(PassportAuthMiddleware), resolveRouteHandler(SignoutHandler));
 
 export default userrouter;
