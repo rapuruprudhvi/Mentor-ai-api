@@ -1,10 +1,10 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { Injectable } from "../decorator/injectable.decorator";
 import { UserService } from "../service/user.service";
 import { ApiResponse } from "../types/api.responce";
 import { RouteHandler } from "../types/handler";
 import { generateToken } from "../utils/jwt.utils";
-import { signinSchema } from "../validation/auth.validation";
+import { signinSchema } from "../dto/auth.validation";
 
 @Injectable()
 export class SigninHandler implements RouteHandler {

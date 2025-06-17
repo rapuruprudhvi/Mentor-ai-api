@@ -3,21 +3,23 @@ import bcrypt from 'bcrypt';
 import { User } from '../entity/user.entity';
 import { Injectable } from "../decorator/injectable.decorator";
 import { DataSource } from 'typeorm';
+import { BlacklistedToken } from '../entity/blacklisted-token.entity';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(private readonly dataSource: DataSource) { }
 
-  async userSignUp(name: string, email: string, mobileNumber: string, password: string,emailVerified: boolean, mobileNumberVerified: boolean){
+  async userSignUp(name: string, email: string, mobileNumber: string, password: string, emailVerified: boolean, mobileNumberVerified: boolean) {
     const userRepo = this.dataSource.getRepository(User);
     const existingEmail = await this.getUserByEmail(email);
 
-    if (existingEmail){
+    if (existingEmail) {
       throw new Error("User already exists");
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    
-   return userRepo.save({
+
+
+    return userRepo.save({
       id: ulid(),
       name,
       email,
@@ -27,10 +29,10 @@ export class UserService {
       mobileNumberVerified,
       createdAt: new Date(),
     });
-   }
+  }
 
-   async userSignIn(identifier: string, password: string) {
-      const user = (await this.getUserByEmail(identifier)) || (await this.getUserByNumber(identifier));
+  async userSignIn(identifier: string, password: string) {
+    const user = (await this.getUserByEmail(identifier)) || (await this.getUserByNumber(identifier));
 
     if (!user) {
       throw new Error("User not found");
@@ -43,10 +45,24 @@ export class UserService {
     }
     return user;
   }
-  
-  async userSignOut(userId: string){
-  // Optionally blacklist token here
-   return `User with ID ${userId} signed out successfully.`;
+
+  async isTokenBlacklisted(token: string) {
+    const repo = this.dataSource.getRepository(BlacklistedToken);
+    const found = await repo.findOneBy({ token });
+    return !!found;
+  }
+
+  async blacklistToken(token: string) {
+    const repo = this.dataSource.getRepository(BlacklistedToken);
+    const alreadyBlacklisted = await repo.findOneBy({ token });
+
+    if (!alreadyBlacklisted) {
+      await repo.save({
+        id: ulid(),
+        token,
+        blacklistedAt: new Date(),
+      });
+    }
   }
 
   async getUserByEmail(email: string) {
@@ -56,9 +72,9 @@ export class UserService {
   async getUserByNumber(mobileNumber: string) {
     return this.dataSource.getRepository(User).findOneBy({ mobileNumber });
   }
-  
+
   async getUserById(id: string) {
     return this.dataSource.getRepository(User).findOneBy({ id });
   }
-}   
+}
 

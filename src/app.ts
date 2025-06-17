@@ -48,9 +48,8 @@ export const createApp = (): http.Server => {
   app.use(urlencoded({ extended: true }));
   app.use(json());
   app.use(cors());
+  
   passportStrategy(passport);
-
-  app.use(express.json());
   app.use(passport.initialize());
   app.use('/api/auth', userrouter);
   

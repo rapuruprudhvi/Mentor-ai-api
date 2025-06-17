@@ -1,33 +1,29 @@
 import { Request, Response } from "express";
-import { UserService } from "../service/user.service";
 import { Injectable } from "../decorator/injectable.decorator";
 import { RouteHandler } from "../types/handler";
 import { ApiResponse } from "../types/api.responce";
-import { UlidIdSchema } from "../validation/id.validation";
+import { UserService } from "../service/user.service";
 
 @Injectable()
 export class SignoutHandler implements RouteHandler {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   async handle(req: Request, res: Response<ApiResponse<null>>) {
-    const user = req.user as { id: string };
+    const token = req.headers.authorization?.split(" ")[1];
 
-    if (!user || !user.id) {
-      return res.status(400).json({
-        error: "User information is missing or invalid",
-      });
-    }
-    const { error } = UlidIdSchema.safeParse(user.id);
-
-    if (error) {
-      return res.status(400).json({
-        error: error.issues[0]?.message || 'Validation error',
-      });
+    if (!token) {
+      return res.status(400).json({ error: "Authorization token not provided" });
     }
 
-    return res.status(200).json({
-      data: null,
-    });
+    const isBlacklisted = await this.userService.isTokenBlacklisted(token);
 
+    if (isBlacklisted) {
+      return res.status(401).json({ error: "Token already blacklisted" });
+    }
+
+    await this.userService.blacklistToken(token);
+
+    return res.status(200).json({ data: null });
   }
 }
+

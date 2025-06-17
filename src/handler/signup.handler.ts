@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { generateToken } from '../utils/jwt.utils';
-import { SignupResponse, signupSchema } from '../validation/auth.validation';
+import { SignupResponse, signupSchema } from '../dto/auth.validation';
 import { UserService } from '../service/user.service';
 import { Injectable } from '../decorator/injectable.decorator';
 import { RouteHandler } from '../types/handler';
