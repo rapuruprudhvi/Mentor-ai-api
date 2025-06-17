@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { CreateCheckoutSessionHandler } from "../../handler/create.checkout.session.handler";
-import { HandleStripeWebhookHandler } from "../../handler/payment.history.handler";
-import { VerifyPaymentSuccessHandler } from "../../handler/payment.success.handler";
-import { GetPaymentHistoryHandler } from "../../handler/stripe.webhook.handler";
-import { resolveRouteHandler } from "../../util/handler.resolver";
+import { CreateCheckoutSessionHandler } from "../handler/create.checkout.session.handler";
+import { HandleStripeWebhookHandler } from "../handler/payment.history.handler";
+import { VerifyPaymentSuccessHandler } from "../handler/payment.success.handler";
+import { GetPaymentHistoryHandler } from "../handler/stripe.webhook.handler";
+import { resolveRouteHandler } from "../utils/handler.utils";
 
 const paymentRouter = Router({ mergeParams: true });
 
