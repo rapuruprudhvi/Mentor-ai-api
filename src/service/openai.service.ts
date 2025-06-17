@@ -1,7 +1,9 @@
 import axios from "axios";
+import { OPENAI_API_URL } from "../config/api.config";
+
 export async function getAnswerFromOpenAI(question: string): Promise<string> {
   const response = await axios.post(
-    "http://localhost:11434/api/chat",
+    OPENAI_API_URL,
     {
       model: "tinyllama",
       messages: [{ role: "user", content: question }],
@@ -22,8 +24,7 @@ export async function getAnswerFromOpenAI(question: string): Promise<string> {
           if (content) {
             finalText += content;
           }
-        } catch (e) {
-        }
+        } catch (_) {}
       }
     });
 
