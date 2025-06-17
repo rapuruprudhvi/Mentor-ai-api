@@ -1,11 +1,16 @@
 // src/app.ts
+import paymentRouter from "./router/payments.router";
+
 import "reflect-metadata";
 import cors from "cors";
 import helmet from "helmet";
 import { json, urlencoded } from "body-parser";
 import compression from "compression";
 import morgan from "morgan";
-import express, { Application, Request, Response } from 'express';
+
+import * as http from "http";
+
+import express, { Request, Response } from "express";
 import passport from "passport";
 import Container from "typedi";
 
@@ -14,52 +19,55 @@ import { ErrorMiddleware } from "./middleware/error.middleware";
 import { logger } from "./config/logger.config";
 import userrouter from './router/user.router';
 import interviewPromptsRouter from "./router/open.ai.route";
-import { AppDataSource } from "./config/database";
 
-export const createApp = (): Application => {
+
+export const createApp = (): http.Server => {
   const app = express();
 
   app.use(helmet());
   app.use(compression());
-  app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+  app.use(cors());
   app.use(urlencoded({ extended: true }));
   app.use(json());
 
-  // logging
+  app.use(cors());
+
+  app.use(express.json());
+
   morgan.token("headers", (req: Request) => {
     const kv: string[] = [];
     for (const key in req.headers) {
-      if (key.toLowerCase() === "authorization" || key.toLowerCase() === "cookie") continue;
+      if (
+        key.toLowerCase() === "authorization" ||
+        key.toLowerCase() === "cookie"
+      ) {
+        continue;
+      }
+
       kv.push(`${key}:${req.headers[key]}`);
     }
     return kv.join(" ");
   });
   app.use(
     morgan(":method :status :url :headers", {
-      stream: { write: (message) => logger.info(message.trim()) },
+      stream: {
+        write: (message) => logger.info(message.trim()),
+      },
     })
   );
 
-  // passport
+  app.use(urlencoded({ extended: true }));
+  app.use(json());
+
   passportStrategy(passport);
   app.use(passport.initialize());
+  app.use("/api/auth", userrouter);
+  app.use("/api/payments", paymentRouter);
+    app.use("/api/interview-prompts", interviewPromptsRouter);
 
-  // routes
-  app.use('/api/auth', userrouter);
-  app.use("/api/interview-prompts", interviewPromptsRouter);
 
-  // health check
-  app.get("/health", (_req: Request, res: Response) => {
-    res.json({
-      status: "OK",
-      timestamp: new Date().toISOString(),
-      database: AppDataSource.isInitialized ? "connected" : "disconnected"
-    });
-  });
-
-  // error middleware
   const globalErrorHandler = Container.get(ErrorMiddleware);
   app.use(globalErrorHandler.handle.bind(globalErrorHandler));
 
-  return app;
+  return http.createServer(app);
 };
