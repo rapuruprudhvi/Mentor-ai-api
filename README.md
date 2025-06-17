@@ -37,7 +37,7 @@ Run the following commands to set up your database schema:
 
 ```bash
 
-# Generate migrations
+# Generate migrations (Note: Frontend team should avoid this command)
 npm run migration:generate
 
 # Run migrations
