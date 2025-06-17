@@ -78,9 +78,11 @@ const startServer = async () => {
     Container.set(DataSource, AppDataSource);
 
     const PORT = process.env.PORT || 4000;
-    server.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-      console.log(`📱 Health check at http://localhost:${PORT}/health`);
+
+    const app = createApp();
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
     });
   } catch (error) {
     console.error("❌ Error starting server:", error);
