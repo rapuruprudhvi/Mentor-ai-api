@@ -16,9 +16,9 @@ import Container from "typedi";
 import { passportStrategy } from "./config/passport";
 import { ErrorMiddleware } from "./middleware/error.middleware";
 import { logger } from "./config/logger.config";
-import userrouter from './router/user.router';
+import userrouter from "./router/user.router";
 import interviewPromptsRouter from "./router/open.ai.router";
-
+import openApiRouter from "./router/openapi.router";
 
 export const createApp = (): http.Server => {
   const app = express();
@@ -60,11 +60,10 @@ export const createApp = (): http.Server => {
 
   passportStrategy(passport);
   app.use(passport.initialize());
+  app.use("/api", openApiRouter);
   app.use("/api/auth", userrouter);
   app.use("/api/payments", paymentRouter);
   app.use("/api/interview-prompts", interviewPromptsRouter);
-  
-
 
   const globalErrorHandler = Container.get(ErrorMiddleware);
   app.use(globalErrorHandler.handle.bind(globalErrorHandler));

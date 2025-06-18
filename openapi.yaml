@@ -1,0 +1,221 @@
+openapi: 3.0.0
+info:
+  title: Your Internal API
+  description: Internal API documentation
+  version: 1.0.0
+  contact:
+    name: Your Team
+    email: team@company.com
+
+# Server configuration
+servers:
+  - url: http://localhost:4000
+    description: Development server
+  - url: https://api.yourcompany.com
+    description: Production server
+
+# Tags for grouping operations
+tags:
+  - name: User
+    description: Operations about users
+
+# API Paths and Operations
+paths:
+  /users:
+    post:
+      tags:
+        - User
+      summary: Create a new user
+      description: Creates a new user account with the provided details.
+      operationId: createUser
+      requestBody:
+        description: User object that needs to be added to the store
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{userId}:
+    get:
+      tags:
+        - User
+      summary: Get user by user ID
+      description: Retrieve a single user's information by their unique ID.
+      operationId: getUserById
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 'd290f1ee-6c54-4b01-90e6-d701748f0851'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - User
+      summary: Update an existing user
+      description: Update an existing user's details by their unique ID. Password updates should be handled by a separate endpoint.
+      operationId: updateUser
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user that needs to be updated
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 'd290f1ee-6c54-4b01-90e6-d701748f0851'
+      requestBody:
+        description: User object with updated data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+        '404':
+          description: User not found
+
+    delete:
+      tags:
+        - User
+      summary: Delete a user
+      description: Deletes a user by their unique ID.
+      operationId: deleteUser
+      parameters:
+        - name: userId
+          in: path
+          description: The ID of the user that needs to be deleted
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 'd290f1ee-6c54-4b01-90e6-d701748f0851'
+      responses:
+        '204':
+          description: User deleted successfully (No Content)
+        '404':
+          description: User not found
+
+# Reusable Components
+components:
+  schemas:
+    # Schema for creating a user (includes passwords)
+    UserCreate:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - passwordConfirmation
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        mobileNumber:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          example: "+14155552671"
+        password:
+          type: string
+          format: password
+          description: User's password (at least 8 characters)
+          example: "strongPassword123"
+        passwordConfirmation:
+          type: string
+          format: password
+          description: Confirmation of the user's password
+          example: "strongPassword123"
+
+    # Schema for updating a user (passwords are not updated here)
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Johnathan Doe"
+        email:
+          type: string
+          format: email
+          example: "johnathan.doe@example.com"
+        mobileNumber:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          example: "+14155552672"
+
+    # Schema for API responses (does NOT include sensitive info like passwords)
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        mobileNumber:
+          type: string
+          example: "+14155552671"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-07-29T10:30:00Z"
+
+    # Generic Error Schema
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      example:
+        code: 404
+        message: "Resource not found"
