@@ -133,6 +133,33 @@ paths:
           description: User deleted successfully (No Content)
         '404':
           description: User not found
+    # interview prompts
+  /interview-prompts:
+    post:
+      tags:
+        - Interview
+      summary: Generate answer for interview question
+      description: Accepts a question and returns an AI-generated answer.
+      operationId: generateInterviewPrompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewPromptRequest'
+      responses:
+        '200':
+          description: Successfully generated answer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewPromptResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
 # Reusable Components
 components:
@@ -219,3 +246,36 @@ components:
       example:
         code: 404
         message: "Resource not found"
+
+# InterviewPromptRequest
+    InterviewPromptRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          example: "What is Java?"
+
+    InterviewPromptResponse:
+      type: object
+      properties:
+        question:
+          type: string
+          example: "What is Java?"
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "dadef5c5b011435b9d6f751ae4"
+            question:
+              type: string
+              example: "What is Java?"
+            answer:
+              type: string
+              example: "Java is an object-oriented programming language..."
+            createdAt:
+              type: string
+              format: date-time
+              example: "2025-06-18T07:53:07.336Z"
