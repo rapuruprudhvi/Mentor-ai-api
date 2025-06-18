@@ -6,6 +6,12 @@ Follow these steps to set up and run the backend server locally:
 
 ---
 
+### Requirements
+
+1. NVM 0.38.0
+2. Node 24.2.0
+3. NPM 11.4.2
+
 ### 📁 1. Clone the Repository
 
 ```
