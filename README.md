@@ -33,7 +33,7 @@ DB_DATABASE=mentor_ai_development
 JWT_SECRET=your_jwt_secret_key
 ```
 
-**Note:** Create `mentor_ai_development` database in your local MySQL instance 
+**Note:** Create `mentor_ai_development` database in your local MySQL instance
 
 ```
 mysql -u <YOUR_USERNAME> -p
@@ -57,7 +57,7 @@ Run the following commands to set up your database schema:
 npm run migration:run
 
 (NOTE: Frontend team should avoid this command)
-# Revert migrations 
+# Revert migrations
 npm run migration:revert
 
 (NOTE: Frontend team should avoid this command)
@@ -104,10 +104,14 @@ Card Number	Description
 ```
 More test cards: Stripe Docs → Test Cards
 
-### 📁 5. **server start**
+### 📁 5. Start Server
 
 ```bash
 npm run dev
 ```
 
 You can access API at `http://localhost:4000`
+
+### 📁 6. API Documentation
+
+Open `http://localhost:4000/api/docs`
