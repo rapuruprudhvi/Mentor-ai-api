@@ -8,6 +8,7 @@ import {
   CheckoutSessionResult,
   PaymentVerificationResult,
   CreateCheckoutSessionInput,
+  PlanDto,
 } from "../dto/payment.dto";
 
 @Injectable()
@@ -170,4 +171,22 @@ export class PaymentService {
       order: { createdAt: "DESC" },
     });
   }
+
+getAllPlans(): PlanDto[] {
+  return Object.values(INTERVIEW_PLANS).map((plan) => ({
+    id: plan.id,
+    name: plan.name,
+    price: plan.amount / 100,
+    priceInCents: plan.priceInCents,
+    label: plan.label,
+    features: plan.features,
+    actionLabel: plan.actionLabel,
+    popular: plan.popular,
+    credits: plan.credits,
+    isFree: plan.amount === 0,
+    formattedPrice: plan.formattedPrice,
+    currency: plan.currency,
+    symbol: plan.symbol,
+  }));
+}
 }
