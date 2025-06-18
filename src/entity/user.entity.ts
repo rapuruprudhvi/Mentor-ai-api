@@ -1,5 +1,4 @@
-
-import { Entity, PrimaryColumn, Column, CreateDateColumn } from "typeorm";
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -18,6 +17,15 @@ export class User {
   @Column()
   name: string;
 
+  @Column({ default: 0 })
+  interviewCredits: number;
+
+  @Column({ nullable: true })
+  profilePicture: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
   @Column({ default: false })
   emailVerified: boolean;
 
@@ -26,4 +34,7 @@ export class User {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
