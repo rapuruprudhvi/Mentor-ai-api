@@ -18,7 +18,8 @@ export const signupSchema = z
       .string()
       .length(10, {
         message: 'Mobile number must be exactly 10 digits',
-      }),
+      })
+      .optional(),
 
     password: z
       .string()
@@ -29,11 +30,6 @@ export const signupSchema = z
       .string()
       .min(6, 'Confirm password must be at least 6 characters'),
 
-    emailVerified: z
-      .boolean({ required_error: 'emailVerified is required' }),
-
-    mobileNumberVerified: z
-      .boolean({ required_error: 'mobileNumberVerified is required' }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -77,3 +73,16 @@ export interface SignupResponse {
   token: string;
   user: UserResponse;
 }
+
+export const sendOtpSchema = z.object({
+  contact: z.string().min(5),
+});
+
+export const otpSchema = z.object({
+  contact: z.string().min(5),
+  otp: z.string().length(6),
+});
+
+export type SendOtpSchema = z.infer<typeof sendOtpSchema>;
+export type OtpSchema = z.infer<typeof otpSchema>;
+
