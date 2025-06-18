@@ -34,11 +34,13 @@
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "stripe": "^18.2.1",
+    "swagger-ui-express": "^5.0.1",
     "typedi": "^0.10.0",
     "typeorm": "^0.3.24",
     "ulid": "^3.0.1",
     "winston": "^3.17.0",
     "ws": "^8.18.2",
+    "yamljs": "^0.3.0",
     "zod": "^3.25.63"
   },
   "devDependencies": {
@@ -51,7 +53,9 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.0.0",
     "@types/passport-jwt": "^4.0.1",
+    "@types/swagger-ui-express": "^4.1.8",
     "@types/ws": "^8.18.1",
+    "@types/yamljs": "^0.2.34",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
