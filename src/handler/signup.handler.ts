@@ -11,43 +11,50 @@ export class SignupHandler implements RouteHandler {
   constructor(private readonly userService: UserService) { }
 
   async handle(req: Request, res: Response<ApiResponse<SignupResponse>>) {
-    const { error, data: body } = signupSchema.safeParse(req.body);
+    try {
+      const { error, data: body } = signupSchema.safeParse(req.body);
 
-    if (error) {
-      return res.status(400).json({
-        error: error.issues[0]?.message || 'Validation error',
+      if (error) {
+        return res.status(400).json({
+          error: error.issues[0]?.message || 'Validation error',
+        });
+      }
+
+      const user = await this.userService.userSignUp(
+        body.name,
+        body.email,
+        body.mobileNumber ?? '',
+        body.password,
+      );
+
+      // const registeredUser = await this.userService.getUserByEmail(body.email);
+
+      // if (!registeredUser?.emailVerified) {
+      //   return res.status(403).json({
+      //     error: 'Please verify your email to complete registration',
+      //   });
+      // }
+
+      const token = generateToken({ id: user.id, email: user.email });
+
+      const response: SignupResponse = {
+        message: 'User registered successfully',
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          mobileNumber: user.mobileNumber,
+          createdAt: user.createdAt?.toISOString(),
+        },
+      };
+
+      return res.status(201).json({ data: response });
+
+    } catch (error) {
+      return res.status(500).json({
+        error: (error instanceof Error ? error.message : 'Internal server error'),
       });
     }
-
-    const user = await this.userService.userSignUp(
-      body.name,
-      body.email,
-      body.mobileNumber ?? '',
-      body.password,
-    );
-
-    const registeredUser = await this.userService.getUserByEmail(body.email);
-
-    if (!registeredUser?.emailVerified) {
-      return res.status(403).json({
-        error: 'Please verify your email to complete registration',
-      });
-    }
-
-    const token = generateToken({ id: user.id, email: user.email });
-
-    const response: SignupResponse = {
-      message: 'User registered successfully',
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        mobileNumber: user.mobileNumber,
-        createdAt: user.createdAt?.toISOString(),
-      },
-    };
-
-    return res.status(201).json({ data: response });
   }
 }
