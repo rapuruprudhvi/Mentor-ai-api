@@ -29,7 +29,13 @@ export class SigninHandler implements RouteHandler {
       });
       return;
     }
+     const registeredUser = await this.userService.getUserByEmail(body.identifier);
 
+    if (!registeredUser?.emailVerified) {
+      return res.status(403).json({
+        error: 'Please verify your email to complete registration',
+      });
+    }
     const token = generateToken({ id: user.id, email: user.email });
 
     res.status(200).json({
