@@ -1,4 +1,3 @@
-// src/entities/InterviewPrompt.ts
 import {
   Entity,
   PrimaryColumn,
