@@ -9,7 +9,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ unique: true }) 
+  @Column({ unique: true })
   mobileNumber: string;
 
   @Column()
@@ -27,4 +27,3 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 }
-
