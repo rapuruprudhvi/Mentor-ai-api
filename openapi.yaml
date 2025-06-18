@@ -18,6 +18,8 @@ servers:
 tags:
   - name: User
     description: Operations about users
+  - name: Payment
+    description: Operations about payments and billing
 
 # API Paths and Operations
 paths:
@@ -34,20 +36,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserCreate'
+              $ref: "#/components/schemas/UserCreate"
       responses:
-        '201':
+        "201":
           description: User created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '400':
+                $ref: "#/components/schemas/User"
+        "400":
           description: Invalid input provided
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /users/{userId}:
     get:
@@ -64,20 +66,20 @@ paths:
           schema:
             type: string
             format: uuid
-            example: 'd290f1ee-6c54-4b01-90e6-d701748f0851'
+            example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '404':
+                $ref: "#/components/schemas/User"
+        "404":
           description: User not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     put:
       tags:
@@ -93,24 +95,24 @@ paths:
           schema:
             type: string
             format: uuid
-            example: 'd290f1ee-6c54-4b01-90e6-d701748f0851'
+            example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
       requestBody:
         description: User object with updated data
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserUpdate'
+              $ref: "#/components/schemas/UserUpdate"
       responses:
-        '200':
+        "200":
           description: User updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '400':
+                $ref: "#/components/schemas/User"
+        "400":
           description: Invalid input
-        '404':
+        "404":
           description: User not found
 
     delete:
@@ -127,12 +129,160 @@ paths:
           schema:
             type: string
             format: uuid
-            example: 'd290f1ee-6c54-4b01-90e6-d701748f0851'
+            example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
       responses:
-        '204':
+        "204":
           description: User deleted successfully (No Content)
-        '404':
+        "404":
           description: User not found
+
+  /payments/checkout-session:
+    post:
+      tags:
+        - Payment
+      summary: Create Stripe checkout session
+      description: Creates a new Stripe checkout session for payment processing.
+      operationId: createCheckoutSession
+      requestBody:
+        description: Checkout session details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutSessionRequest"
+      responses:
+        "201":
+          description: Checkout session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSessionResponse"
+        "400":
+          description: Invalid input provided
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /payments/webhook:
+    post:
+      tags:
+        - Payment
+      summary: Handle Stripe webhook
+      description: Handles incoming Stripe webhook events for payment processing.
+      operationId: handleStripeWebhook
+      requestBody:
+        description: Stripe webhook payload
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Raw Stripe webhook payload
+      responses:
+        "200":
+          description: Webhook processed successfully
+        "400":
+          description: Invalid webhook signature or payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /payments/verify/{sessionId}:
+    get:
+      tags:
+        - Payment
+      summary: Verify payment success
+      description: Verifies if a payment session was completed successfully.
+      operationId: verifyPaymentSuccess
+      parameters:
+        - name: sessionId
+          in: path
+          description: Stripe session ID to verify
+          required: true
+          schema:
+            type: string
+            example: "cs_test_1234567890"
+      responses:
+        "200":
+          description: Payment verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentVerificationResponse"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /payments/history/{userId}:
+    get:
+      tags:
+        - Payment
+      summary: Get payment history
+      description: Retrieves payment history for a specific user.
+      operationId: getPaymentHistory
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user to get payment history for
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of records per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        "200":
+          description: Payment history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentHistoryResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /payments/plans:
+    get:
+      tags:
+        - Payment
+      summary: Get available plans
+      description: Retrieves all available interview plans and pricing.
+      operationId: getPlans
+      responses:
+        "200":
+          description: Plans retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlansResponse"
 
 # Reusable Components
 components:
@@ -202,10 +352,227 @@ components:
         mobileNumber:
           type: string
           example: "+14155552671"
+        interviewCredits:
+          type: integer
+          example: 5
+        profilePicture:
+          type: string
+          nullable: true
+          example: "https://example.com/profile.jpg"
+        isActive:
+          type: boolean
+          example: true
+        emailVerified:
+          type: boolean
+          example: true
+        mobileNumberVerified:
+          type: boolean
+          example: false
         createdAt:
           type: string
           format: date-time
           example: "2024-07-29T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-07-29T10:30:00Z"
+
+    # Payment related schemas
+    CheckoutSessionRequest:
+      type: object
+      required:
+        - planId
+        - userId
+      properties:
+        planId:
+          type: string
+          enum: ["free_trial", "interview_bundle", "single_interview"]
+          example: "interview_bundle"
+        userId:
+          type: string
+          format: uuid
+          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+        successUrl:
+          type: string
+          format: uri
+          example: "https://yourapp.com/success"
+        cancelUrl:
+          type: string
+          format: uri
+          example: "https://yourapp.com/cancel"
+
+    CheckoutSessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          example: "cs_test_1234567890"
+        url:
+          type: string
+          format: uri
+          example: "https://checkout.stripe.com/pay/cs_test_1234567890"
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+        stripeSessionId:
+          type: string
+          nullable: true
+          example: "cs_test_1234567890"
+        stripePaymentIntentId:
+          type: string
+          nullable: true
+          example: "pi_test_1234567890"
+        amount:
+          type: number
+          format: decimal
+          example: 249.00
+        currency:
+          type: string
+          example: "INR"
+        planType:
+          type: string
+          example: "interview_bundle"
+        interviewCredits:
+          type: integer
+          example: 5
+        status:
+          type: string
+          enum: ["pending", "completed", "failed", "cancelled"]
+          example: "completed"
+        paymentMethod:
+          type: string
+          nullable: true
+          example: "card"
+        receiptUrl:
+          type: string
+          nullable: true
+          format: uri
+          example: "https://pay.stripe.com/receipts/example"
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties: true
+        userId:
+          type: string
+          format: uuid
+          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-07-29T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-07-29T10:30:00Z"
+
+    PaymentVerificationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        session:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "cs_test_1234567890"
+            status:
+              type: string
+              example: "complete"
+            payment_status:
+              type: string
+              example: "paid"
+        payment:
+          $ref: "#/components/schemas/Payment"
+
+    PaymentHistoryResponse:
+      type: object
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 10
+            total:
+              type: integer
+              example: 25
+            totalPages:
+              type: integer
+              example: 3
+
+    Plan:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "interview_bundle"
+        name:
+          type: string
+          example: "Power Pack"
+        amount:
+          type: integer
+          example: 24900
+        priceInCents:
+          type: integer
+          example: 24900
+        credits:
+          type: integer
+          example: 5
+        label:
+          type: string
+          example: "₹249 / 5 interviews"
+        description:
+          type: string
+          example: "For the serious job seeker. Be prepared for every round."
+        features:
+          type: array
+          items:
+            type: string
+          example:
+            - "5 Interview Credits"
+            - "Over 50% discount per interview"
+            - "Credits never expire"
+            - "Full access to all features"
+        actionLabel:
+          type: string
+          example: "Buy Power Pack"
+        popular:
+          type: boolean
+          example: true
+        isFree:
+          type: boolean
+          example: false
+        formattedPrice:
+          type: string
+          example: "₹249"
+        currency:
+          type: string
+          example: "INR"
+        symbol:
+          type: string
+          example: "₹"
+
+    PlansResponse:
+      type: object
+      properties:
+        plans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Plan"
 
     # Generic Error Schema
     Error:
