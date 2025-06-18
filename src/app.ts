@@ -61,7 +61,7 @@ export const createApp = (): http.Server => {
   app.use(json());
 
   passportStrategy(passport);
-  app.use(passport.initialize());
+  app.use(passport.initialize()); 
   app.use("/api", openApiRouter);
   app.use("/api/auth", userrouter);
   app.use("/api/payments", paymentRouter);
