@@ -115,3 +115,31 @@ You can access API at `http://localhost:4000`
 ### 📁 6. API Documentation
 
 Open `http://localhost:4000/api/docs`
+
+
+
+### Email Configuration
+To configure email functionality, you need to set up the following environment variables in your `.env` file:
+
+```env
+SMTP_EMAIL=your_email@example.com
+SMTP_PASSWORD=your_gmail_app_password
+```
+steps to generate Gmail App Password:
+1. Go to your Google Account.(https://myaccount.google.com/)
+2. Select Security.
+3. Under "Signing in to Google," turn on 2-Step Verification if it's not already enabled
+4. After 2FA is on, go to App passwords: https://myaccount.google.com/apppasswords
+5. Select "Mail" as the app and "Other" as the device, then enter a name (e.g., "My App").
+6. Click "Generate" and copy the generated app password.
+
+
+### OpenAI Installation
+To install ollama and set up the OpenAI API, follow these steps:
+```bash
+# Install ollama :
+curl -sSfL https://ollama.com/download.sh | sh
+# Pull the tinyllama model
+ollama pull tinyllama
+
+
