@@ -9,21 +9,27 @@ import { logger } from '../config/logger.config';
 
 @Injectable()
 export class VerifyOtpHandler implements RouteHandler {
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService) { }
 
   async handle(req: Request, res: Response<ApiResponse<OtpSchema>>) {
-    const { error, data: body } = otpSchema.safeParse(req.body);
+    try {
+      const { error, data: body } = otpSchema.safeParse(req.body);
 
-     if (error) {
-      logger.error(error.issues[0]?.message);
-      return res.status(400).json({ error: "Bad Request" });
-    }
+      if (error) {
+        logger.error(error.issues[0]?.message);
+        return res.status(400).json({ error: "Bad Request" });
+      }
 
-    const { contact, otp } = body;
-    const result = await this.userService.verifyOtp(contact, otp);
-    if (!result) {
-      return res.status(400).json({ error: 'Invalid OTP or contact' });
+      const { contact, otp } = body;
+      const result = await this.userService.verifyOtp(contact, otp);
+      if (!result) {
+        return res.status(400).json({ error: 'Invalid OTP or contact' });
+      }
+      return res.status(200).json({ data: result });
+    } catch (error) {
+      return res.status(500).json({
+        error: (error instanceof Error ? error.message : 'Internal server error'),
+      });
     }
-    return res.status(200).json({ data: result });
   }
 }

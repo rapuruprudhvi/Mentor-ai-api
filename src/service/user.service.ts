@@ -27,6 +27,7 @@ export class UserService {
     if (existingEmail) {
       throw new Error("User already exists");
     }
+    
     const hashedPassword = await bcrypt.hash(password, 10);
 
 
@@ -52,7 +53,7 @@ export class UserService {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      throw new Error("Invalid credentials");
+      throw new Error("Invalid email or password");
     }
     return user;
   }
@@ -110,6 +111,7 @@ export class UserService {
       message: "OTP sent successfully",
     };
   }
+  
   async verifyOtp(contact: string, otp: string) {
     const saved = otpStore.get(contact);
     const userRepo = this.dataSource.getRepository(User);
@@ -139,6 +141,5 @@ export class UserService {
       message: "Contact verified successfully",
     };
   }
-
 }
 

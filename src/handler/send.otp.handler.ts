@@ -15,8 +15,14 @@ export class SendOtpHandler implements RouteHandler {
     res: Response<ApiResponse<SendOtpSchema>>,
   ) {
     const { email } = req.body;
-  const result = await this.userService.sendOtp(email);
-  return res.status(200).json({ data: result });
+    try {
+      const result = await this.userService.sendOtp(email);
+      return res.status(200).json({ data: result });
+    } catch (error) {
+      return res.status(500).json({
+        error: (error instanceof Error ? error.message : 'Internal server error'),
+      });
+    }
   }
 }
 
