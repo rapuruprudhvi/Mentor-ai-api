@@ -1,4 +1,3 @@
-// src/app.ts
 import paymentRouter from "./router/payments.router";
 
 import "reflect-metadata";
@@ -18,7 +17,7 @@ import { passportStrategy } from "./config/passport";
 import { ErrorMiddleware } from "./middleware/error.middleware";
 import { logger } from "./config/logger.config";
 import userrouter from './router/user.router';
-import interviewPromptsRouter from "./router/open.ai.route";
+import interviewPromptsRouter from "./router/open.ai.router";
 
 
 export const createApp = (): http.Server => {
@@ -63,7 +62,8 @@ export const createApp = (): http.Server => {
   app.use(passport.initialize());
   app.use("/api/auth", userrouter);
   app.use("/api/payments", paymentRouter);
-    app.use("/api/interview-prompts", interviewPromptsRouter);
+  app.use("/api/interview-prompts", interviewPromptsRouter);
+  
 
 
   const globalErrorHandler = Container.get(ErrorMiddleware);
