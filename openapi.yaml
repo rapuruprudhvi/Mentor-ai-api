@@ -65,8 +65,8 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
-            example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+            example: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
       responses:
         "200":
           description: Successful operation
@@ -94,8 +94,8 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
-            example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+            example: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
       requestBody:
         description: User object with updated data
         required: true
@@ -128,15 +128,15 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
-            example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+            example: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
       responses:
         "204":
           description: User deleted successfully (No Content)
         "404":
           description: User not found
 
-  /payments/checkout-session:
+  /api/payments/checkout-session:
     post:
       tags:
         - Payment
@@ -170,7 +170,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /payments/webhook:
+  /api/payments/webhook:
     post:
       tags:
         - Payment
@@ -195,7 +195,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /payments/verify/{sessionId}:
+  /api/payments/verify/{sessionId}:
     get:
       tags:
         - Payment
@@ -224,7 +224,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /payments/history/{userId}:
+  /api/payments/history/{userId}:
     get:
       tags:
         - Payment
@@ -238,8 +238,8 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
-            example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+            example: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
         - name: page
           in: query
           description: Page number for pagination
@@ -269,7 +269,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /payments/plans:
+  /api/payments/plans:
     get:
       tags:
         - Payment
@@ -340,8 +340,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
-          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          example: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
         name:
           type: string
           example: "John Doe"
@@ -390,8 +390,8 @@ components:
           example: "interview_bundle"
         userId:
           type: string
-          format: uuid
-          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          example: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
         successUrl:
           type: string
           format: uri
@@ -417,8 +417,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
-          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          example: "01BX5ZZKBKACT-8RNJEHP-S-T9"
         stripeSessionId:
           type: string
           nullable: true
@@ -459,8 +459,8 @@ components:
           additionalProperties: true
         userId:
           type: string
-          format: uuid
-          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          example: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
         createdAt:
           type: string
           format: date-time
