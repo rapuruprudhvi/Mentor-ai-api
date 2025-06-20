@@ -45,7 +45,7 @@ export class SignupHandler implements RouteHandler {
           name: user.name,
           email: user.email,
           mobileNumber: user.mobileNumber,
-          createdAt: user.createdAt?.toISOString(),
+          createdAt: user.createdAt,
         },
       };
 
