@@ -239,6 +239,95 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SignoutError'
+# Request Reset Password
+  /api/auth/request-password-reset:
+    post:
+      tags:
+        - Auth
+      summary: Request password reset
+      description: Sends a password reset token to the user's email.
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        description: Email address of the user who wants to reset the password
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestPasswordReset'
+      responses:
+        '200':
+          description: Reset token sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestPasswordResetSuccess'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestPasswordResetError'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestPasswordResetError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestPasswordResetError'
+
+# Reset Password
+  /api/auth/reset-password:
+    post:
+      tags:
+        - Auth
+      summary: Reset user password
+      description: Resets the user's password using a valid token.
+      operationId: resetPassword
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        description: New password and confirmation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordSuccess'
+        '400':
+          description: Invalid token or input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '401':
+          description: Unauthorized or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordError'
+        '403':
+          description: Token has already been used
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordError'
 
 
 # Reusable Components
@@ -502,3 +591,65 @@ components:
       properties:
         code: 500
         message: "Internal server error"
+
+    # Schema for requesting password reset
+    RequestPasswordReset:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+
+    RequestPasswordResetSuccess:
+      type: object
+      properties:
+        data:
+          type: string
+          description: JWT reset token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        message:
+          type: string
+          example: "Reset password link sent to email"
+
+    RequestPasswordResetError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid input or token"
+
+    # Schema for resetting password
+    ResetPassword:
+      type: object
+      required:
+        - password
+        - confirmPassword
+      properties:
+        password:
+          type: string
+          minLength: 6
+          example: "newStrongPassword123"
+        confirmPassword:
+          type: string
+          minLength: 6
+          example: "newStrongPassword123"
+
+    ResetPasswordSuccess:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Password reset successfully"
+        data:
+          $ref: '#/components/schemas/User'
+
+    ResetPasswordError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid input or token"
+

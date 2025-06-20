@@ -16,7 +16,7 @@ export class SigninHandler implements RouteHandler {
     try {
       if (error) {
         res.status(400).json({
-          error: error.issues[0]?.message || 'Validation error',
+          error: 'Validation error',
         });
         return;
       }
