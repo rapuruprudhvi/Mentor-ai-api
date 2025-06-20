@@ -27,7 +27,7 @@ export class UserService {
     if (existingEmail) {
       throw new Error("User already exists");
     }
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
 
@@ -111,7 +111,7 @@ export class UserService {
       message: "OTP sent successfully",
     };
   }
-  
+
   async verifyOtp(contact: string, otp: string) {
     const saved = otpStore.get(contact);
     const userRepo = this.dataSource.getRepository(User);
@@ -141,5 +141,12 @@ export class UserService {
       message: "Contact verified successfully",
     };
   }
-}
 
+  async resetUserPassword(user: User, newPassword: string) {
+    const repo = this.dataSource.getRepository(User);
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    await repo.save(user);
+    return { user };
+  }
+}
