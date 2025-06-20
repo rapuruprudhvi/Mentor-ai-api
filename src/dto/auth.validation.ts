@@ -65,7 +65,7 @@ export interface UserResponse {
   name: string;
   email: string;
   mobileNumber: string;
-  createdAt?: string;
+  createdAt?: Date;
 }
 
 export interface SignupResponse {
