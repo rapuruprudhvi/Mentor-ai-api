@@ -65,7 +65,7 @@ export interface UserResponse {
   name: string;
   email: string;
   mobileNumber: string;
-  createdAt?: string;
+  createdAt?: Date;
 }
 
 export interface SignupResponse {
@@ -86,3 +86,17 @@ export const otpSchema = z.object({
 export type SendOtpSchema = z.infer<typeof sendOtpSchema>;
 export type OtpSchema = z.infer<typeof otpSchema>;
 
+export const requestPasswordResetSchema = z.object({
+  email: z.string().email("Invalid email"),
+});
+
+export const resetPasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

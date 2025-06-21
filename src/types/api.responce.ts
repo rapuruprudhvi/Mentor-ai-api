@@ -1,6 +1,8 @@
 interface SuccessResponse<T> {
   data: T; // Data is present in success cases
   error?: never; // Error must be absent
+  message?: string;
+
 }
 
 interface ErrorResponse {

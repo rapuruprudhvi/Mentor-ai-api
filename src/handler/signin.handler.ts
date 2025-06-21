@@ -4,19 +4,19 @@ import { UserService } from "../service/user.service";
 import { ApiResponse } from "../types/api.responce";
 import { RouteHandler } from "../types/handler";
 import { generateToken } from "../utils/jwt.utils";
-import { signinSchema } from "../dto/auth.validation";
+import { signinSchema, UserResponse } from "../dto/auth.validation";
 
 @Injectable()
 export class SigninHandler implements RouteHandler {
   constructor(private readonly userService: UserService) { }
   async handle(
     req: Request,
-    res: Response<ApiResponse<{ token: string }>>,) {
+    res: Response<ApiResponse<{ token: string, user: UserResponse }>>,) {
     const { error, data: body } = signinSchema.safeParse(req.body);
     try {
       if (error) {
         res.status(400).json({
-          error: error.issues[0]?.message || 'Validation error',
+          error: 'Validation error',
         });
         return;
       }
@@ -39,7 +39,16 @@ export class SigninHandler implements RouteHandler {
       const token = generateToken({ id: user.id, email: user.email });
 
       res.status(200).json({
-        data: { token },
+        data: {
+          token,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            mobileNumber: user.mobileNumber ?? '',
+            createdAt: user.createdAt,
+          },
+        },
       });
     } catch (error) {
       res.status(500).json({
