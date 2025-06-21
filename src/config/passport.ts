@@ -26,7 +26,10 @@ export const passportStrategy = (passport: PassportStatic): void => {
         }
 
         const userRepo = AppDataSource.getRepository(User);
-        const user = await userRepo.findOneBy({ id: jwt_payload.id });
+        const user = jwt_payload.id
+          ? await userRepo.findOneBy({ id: jwt_payload.id })
+          : await userRepo.findOneBy({ email: jwt_payload.email });
+
 
         if (!user) return done(null, false);
         return done(null, user);

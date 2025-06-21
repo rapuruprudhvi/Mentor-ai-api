@@ -16,7 +16,7 @@ export class SignupHandler implements RouteHandler {
 
       if (error) {
         return res.status(400).json({
-          error: error.issues[0]?.message || 'Validation error',
+          error: 'Validation error',
         });
       }
 
@@ -45,7 +45,7 @@ export class SignupHandler implements RouteHandler {
           name: user.name,
           email: user.email,
           mobileNumber: user.mobileNumber,
-          createdAt: user.createdAt?.toISOString(),
+          createdAt: user.createdAt,
         },
       };
 
