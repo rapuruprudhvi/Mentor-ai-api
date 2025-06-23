@@ -161,6 +161,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+      # get all question and answers
+    /interview-prompts:
+    get:
+      tags:
+        - Interview
+      summary: Get all interview prompts
+      description: Returns a list of all stored interview prompts.
+      operationId: listInterviewPrompts
+      responses:
+        '200':
+          description: A list of interview prompts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewPromptListResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 # Authentication and Signup
   /api/auth/signup:
     post:
@@ -482,6 +504,67 @@ components:
               type: string
               format: date-time
               example: "2025-06-18T07:53:07.336Z"
+
+      # schema for to get all interview-prompts
+      
+    InterviewPromptRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          example: "What is Java?"
+
+    InterviewPromptResponse:
+      type: object
+      properties:
+        question:
+          type: string
+          example: "What is Java?"
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "dadef5c5b011435b9d6f751ae4"
+            question:
+              type: string
+              example: "What is Java?"
+            answer:
+              type: string
+              example: "Java is an object-oriented programming language..."
+            createdAt:
+              type: string
+              format: date-time
+              example: "2025-06-18T07:53:07.336Z"
+
+    InterviewPromptListResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            example: "7a461cb3c6644bf194dcdcc522"
+          question:
+            type: string
+            example: "What is Java?"
+          answer:
+            type: string
+            example: "Java is a programming language..."
+          createdAt:
+            type: string
+            format: date-time
+            example: "2025-06-23T10:54:19.561Z"
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Something went wrong."
+
     # Schema for user signup response
     UserSignupZod:
       type: object

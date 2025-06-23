@@ -2,6 +2,7 @@ import { AppDataSource } from "../config/database";
 import { Injectable } from "../decorator/injectable.decorator";
 import { InterviewPrompt } from "../entity/InterviewPrompt";
 import { randomUUID } from "crypto";
+import { InterviewPromptDto } from "../dto/interview.prompt.dto";
 
 @Injectable()
 export class InterviewPromptService {
@@ -17,14 +18,18 @@ export class InterviewPromptService {
     return this.repo.save(prompt);
   }
 
-  async update(promptId: string, fullAnswer: string): Promise<InterviewPrompt | null> {
-    const prompt = await this.repo.findOne({ where: { id: promptId } });
+  async getAllPrompts(): Promise<InterviewPromptDto[]> {
+    const prompts = await this.repo.find({
+      order: {
+        createdAt: "DESC",
+      },
+    });
 
-    if (!prompt) {
-      return null;
-    }
-
-    prompt.answer = fullAnswer;
-    return this.repo.save(prompt);
+    return prompts.map((p) => ({
+      id: p.id,
+      question: p.question,
+      answer: p.answer,
+      createdAt: p.createdAt.toISOString(),
+    }));
   }
 }
