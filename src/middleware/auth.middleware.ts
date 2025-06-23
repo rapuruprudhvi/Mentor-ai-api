@@ -9,14 +9,17 @@ export class PassportAuthMiddleware implements RouteHandler {
     passport.authenticate("jwt", { session: false }, (err: Error, user: Express.User | null | false) => {
 
       if (err) {
+        console.log("Authentication error:", err, "User:", user);
         return res.status(401).json({ message: "Unauthorized", error: err });
       }
 
       if (!user) {
+        console.log("Invalid or expired token");
         return res.status(401).json({ message: "Invalid or expired token" });
       }
 
       req.user = user;
+      console.log("User authenticated successfully:", user);
       return next();
     })(req, res, next);
   }
