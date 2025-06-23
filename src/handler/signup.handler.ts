@@ -8,25 +8,32 @@ import { ApiResponse } from '../types/api.responce';
 
 @Injectable()
 export class SignupHandler implements RouteHandler {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   async handle(req: Request, res: Response<ApiResponse<SignupResponse>>) {
+    try {
       const { error, data: body } = signupSchema.safeParse(req.body);
 
       if (error) {
         return res.status(400).json({
-          error: error.issues[0]?.message || 'Validation error',
+          error: 'Validation error',
         });
       }
 
       const user = await this.userService.userSignUp(
         body.name,
         body.email,
-        body.mobileNumber,
+        body.mobileNumber ?? '',
         body.password,
-        body.emailVerified,
-        body.mobileNumberVerified
       );
+
+      // const registeredUser = await this.userService.getUserByEmail(body.email);
+
+      // if (!registeredUser?.emailVerified) {
+      //   return res.status(403).json({
+      //     error: 'Please verify your email to complete registration',
+      //   });
+      // }
 
       const token = generateToken({ id: user.id, email: user.email });
 
@@ -38,10 +45,16 @@ export class SignupHandler implements RouteHandler {
           name: user.name,
           email: user.email,
           mobileNumber: user.mobileNumber,
-          createdAt: user.createdAt?.toISOString(),
+          createdAt: user.createdAt,
         },
       };
 
       return res.status(201).json({ data: response });
-    } 
+
+    } catch (error) {
+      return res.status(500).json({
+        error: (error instanceof Error ? error.message : 'Internal server error'),
+      });
+    }
+  }
 }

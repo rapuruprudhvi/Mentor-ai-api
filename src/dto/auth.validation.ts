@@ -18,7 +18,8 @@ export const signupSchema = z
       .string()
       .length(10, {
         message: 'Mobile number must be exactly 10 digits',
-      }),
+      })
+      .optional(),
 
     password: z
       .string()
@@ -29,11 +30,6 @@ export const signupSchema = z
       .string()
       .min(6, 'Confirm password must be at least 6 characters'),
 
-    emailVerified: z
-      .boolean({ required_error: 'emailVerified is required' }),
-
-    mobileNumberVerified: z
-      .boolean({ required_error: 'mobileNumberVerified is required' }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -69,7 +65,7 @@ export interface UserResponse {
   name: string;
   email: string;
   mobileNumber: string;
-  createdAt?: string;
+  createdAt?: Date;
 }
 
 export interface SignupResponse {
@@ -77,3 +73,30 @@ export interface SignupResponse {
   token: string;
   user: UserResponse;
 }
+
+export const sendOtpSchema = z.object({
+  contact: z.string().min(5),
+});
+
+export const otpSchema = z.object({
+  contact: z.string().min(5),
+  otp: z.string().length(6),
+});
+
+export type SendOtpSchema = z.infer<typeof sendOtpSchema>;
+export type OtpSchema = z.infer<typeof otpSchema>;
+
+export const requestPasswordResetSchema = z.object({
+  email: z.string().email("Invalid email"),
+});
+
+export const resetPasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
