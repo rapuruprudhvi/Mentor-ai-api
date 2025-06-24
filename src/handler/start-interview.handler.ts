@@ -31,7 +31,6 @@ export class StartInterviewHandler implements RouteHandler {
       const result = await this.interviewService.startInterview(user.id, title);
       res.status(200).json(result);
     } catch (error) {
-      console.error("Start interview error:", error);
       res.status(500).json({
         error: error instanceof Error ? error.message : "Internal server error",
       });
