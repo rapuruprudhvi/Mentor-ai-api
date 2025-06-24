@@ -8,7 +8,6 @@ export const createCheckoutSessionSchema = z.object({
 export type PlanDto = {
   id: string;
   name: string;
-
   priceInCents: number;
   label: string;
   features: string[];

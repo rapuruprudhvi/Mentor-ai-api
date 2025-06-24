@@ -2,61 +2,37 @@ import type { Request, Response } from "express";
 import { Injectable } from "../decorator/injectable.decorator";
 import { PaymentService } from "../service/payment.service";
 import { RouteHandler } from "../types/handler";
-import type Stripe from "stripe";
 
 @Injectable()
-export class HandleStripeWebhookHandler implements RouteHandler {
+export class GetPaymentHistoryHandler implements RouteHandler {
   constructor(private readonly paymentService: PaymentService) {}
 
   async handle(req: Request, res: Response): Promise<void> {
-    console.log(
-      "Webhook received:",
-      req.headers["stripe-signature"] ? "with signature" : "without signature"
-    );
-
     try {
-      const signature = req.headers["stripe-signature"] as string;
+      const { userId } = req.params;
+      const { pageIndex = "0", pageSize = "10" } = req.query;
 
-      let event: Stripe.Event;
-      try {
-        event = this.paymentService.verifyWebhookSignature(req.body, signature);
-        console.log("Webhook event verified:", event.type);
-      } catch (err) {
-        console.error("Webhook signature verification failed:", err);
-        res
-          .status(400)
-          .json({ error: "Webhook signature verification failed" });
+      if (!userId) {
+        res.status(400).json({ error: "User ID is required" });
         return;
       }
 
-      if (event.type === "checkout.session.completed") {
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log("Processing checkout.session.completed:", session.id);
+      const page = parseInt(pageIndex as string, 10);
+      const size = parseInt(pageSize as string, 10);
 
-        try {
-          await this.paymentService.processPaymentCompletion(session);
-        } catch (dbError) {
-          console.error("Database error during payment processing:", dbError);
-          res
-            .status(500)
-            .json({ error: "Database error during payment processing" });
-          return;
-        }
+      if (isNaN(page) || isNaN(size)) {
+        res.status(400).json({ error: "Invalid pagination parameters" });
+        return;
       }
 
-      res.status(200).json({ received: true });
+      const skip = page * size;
+
+      const [result] = await this.paymentService.getPaymentHistory(userId, skip, size);
+
+      res.status(200).json(result);
     } catch (error) {
-      console.error("Error handling webhook:", error);
-
-      if (
-        error instanceof Error &&
-        error.message === "Stripe webhook secret is not configured"
-      ) {
-        res.status(400).json({ error: error.message });
-        return;
-      }
-
-      res.status(500).json({ error: "Failed to process webhook" });
+      console.error("Error fetching payment history:", error);
+      res.status(500).json({ error: "Failed to fetch payment history" });
     }
   }
 }
