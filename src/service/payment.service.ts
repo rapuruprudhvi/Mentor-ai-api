@@ -164,29 +164,62 @@ export class PaymentService {
     };
   }
 
-  async getPaymentHistory(userId: string): Promise<Payment[]> {
+  async getPaymentHistory(
+    userId: string,
+    skip = 0,
+    take = 10
+  ): Promise<
+    [
+      {
+        items: Payment[];
+        totalItems: number;
+        totalPages: number;
+        currentPage: number;
+        pageSize: number;
+      },
+      number
+    ]
+  > {
     const paymentRepository = AppDataSource.getRepository(Payment);
-    return await paymentRepository.find({
+
+    const [items, totalItems] = await paymentRepository.findAndCount({
       where: { userId },
       order: { createdAt: "DESC" },
+      skip,
+      take,
     });
+
+    const pageSize = take;
+    const currentPage = Math.floor(skip / take);
+    const totalPages = Math.ceil(totalItems / take);
+
+    return [
+      {
+        items,
+        totalItems,
+        totalPages,
+        currentPage,
+        pageSize,
+      },
+      totalItems,
+    ];
   }
 
-getAllPlans(): PlanDto[] {
-  return Object.values(INTERVIEW_PLANS).map((plan) => ({
-    id: plan.id,
-    name: plan.name,
-    price: plan.amount / 100,
-    priceInCents: plan.priceInCents,
-    label: plan.label,
-    features: plan.features,
-    actionLabel: plan.actionLabel,
-    popular: plan.popular,
-    credits: plan.credits,
-    isFree: plan.amount === 0,
-    formattedPrice: plan.formattedPrice,
-    currency: plan.currency,
-    symbol: plan.symbol,
-  }));
-}
+  getAllPlans(): PlanDto[] {
+    return Object.values(INTERVIEW_PLANS).map((plan) => ({
+      id: plan.id,
+      name: plan.name,
+      price: plan.amount / 100,
+      priceInCents: plan.priceInCents,
+      label: plan.label,
+      features: plan.features,
+      actionLabel: plan.actionLabel,
+      popular: plan.popular,
+      credits: plan.credits,
+      isFree: plan.amount === 0,
+      formattedPrice: plan.formattedPrice,
+      currency: plan.currency,
+      symbol: plan.symbol,
+    }));
+  }
 }
