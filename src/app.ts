@@ -19,17 +19,14 @@ import { logger } from "./config/logger.config";
 import userrouter from "./router/user.router";
 import interviewPromptsRouter from "./router/open.ai.router";
 import openApiRouter from "./router/openapi.router";
+import interviewsRouter from "./router/interview.router";
 
 export const createApp = (): http.Server => {
   const app = express();
-
   app.use(helmet());
   app.use(compression());
   app.use(cors());
   app.use(urlencoded({ extended: true }));
-  app.use(json());
-
-  app.use(cors());
 
   app.use(express.json());
 
@@ -55,15 +52,16 @@ export const createApp = (): http.Server => {
     })
   );
 
-  app.use(urlencoded({ extended: true }));
-  app.use(json());
-
   passportStrategy(passport);
-  app.use(passport.initialize()); 
+  
+  app.use(passport.initialize());
+  console.log("Passport strategy initialized");
+
   app.use("/api", openApiRouter);
   app.use("/api/auth", userrouter);
   app.use("/api/payments", paymentRouter);
   app.use("/api/interview-prompts", interviewPromptsRouter);
+  app.use("/api/interview", interviewsRouter);
 
   const globalErrorHandler = Container.get(ErrorMiddleware);
   app.use(globalErrorHandler.handle.bind(globalErrorHandler));
