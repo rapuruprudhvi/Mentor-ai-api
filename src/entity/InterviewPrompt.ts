@@ -3,7 +3,6 @@ import {
   PrimaryColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
 } from "typeorm";
 
 @Entity({ schema: "interview" })
@@ -16,6 +15,9 @@ export class InterviewPrompt {
 
   @Column({ type: "text" })
   answer: string;
+
+  @Column("uuid")
+  userId: string; 
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
