@@ -37,22 +37,23 @@ export class SigninHandler implements RouteHandler {
       //   });
       // }
       const token = generateToken({ id: user.id, email: user.email });
-
-      res.status(200).json({
-        data: {
-          token,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            mobileNumber: user.mobileNumber ?? '',
-            createdAt: user.createdAt,
-          },
+     
+      const response = {
+        message: 'User signed in successfully',
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          mobileNumber: user.mobileNumber?? '',
+          createdAt: user.createdAt,
         },
-      });
+      };
+
+      return res.status(200).json({ data: response });
     } catch (error) {
-      res.status(500).json({
-        error: (error instanceof Error ? error.message : 'Internal server error'),
+      res.status(400).json({
+        error: (error instanceof Error ? error.message : 'Something Went Wrong'),
       });
     }
   }

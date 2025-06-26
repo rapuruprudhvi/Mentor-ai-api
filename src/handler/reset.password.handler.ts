@@ -12,7 +12,7 @@ export class ResetPasswordHandler implements RouteHandler {
 
   async handle(
     req: Request,
-    res: Response<ApiResponse<UserResponse>>) {
+    res: Response<ApiResponse<string>>) {
     try {
       const { error, data: body } = resetPasswordSchema.safeParse(req.body);
 
@@ -42,20 +42,13 @@ export class ResetPasswordHandler implements RouteHandler {
 
       await this.userService.blacklistToken(token);
 
-      const response: UserResponse = {
-        id: updateUser.user.id,
-        name: updateUser.user.name,
-        email: updateUser.user.email,
-        mobileNumber: updateUser.user.mobileNumber ?? '',
-        createdAt: updateUser.user.createdAt,
-      };
 
       return res.status(200).json({
-        message: "Password reset successfully",
-        data: response
+        data: "Password reset successfully"
       });
+      
     } catch (err: any) {
-      return res.status(500).json({ error: err.message || "Internal server error" });
+      return res.status(400).json({ error: err.message || "Something Went Wrong" });
     }
   }
 }

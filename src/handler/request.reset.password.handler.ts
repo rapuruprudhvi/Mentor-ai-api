@@ -31,7 +31,7 @@ export class RequestResetHandler implements RouteHandler {
 
       return res.status(200).json({ data: token, message: "Reset password link sent to email" });
     } catch (err: any) {
-      return res.status(500).json({ error: err.message || "Internal server error" });
+      return res.status(400).json({ error: err.message || "Something Went Wrong" });
     }
   }
 }
