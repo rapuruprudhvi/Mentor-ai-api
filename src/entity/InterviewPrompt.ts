@@ -19,6 +19,10 @@ export class InterviewPrompt {
   @Column("uuid")
   userId: string; 
 
+  @Column("uuid") 
+  sessionId: string;
+
+
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
 }

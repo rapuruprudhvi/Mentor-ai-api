@@ -53,7 +53,7 @@ export const createApp = (): http.Server => {
   );
 
   passportStrategy(passport);
-  
+
   app.use(passport.initialize());
   console.log("Passport strategy initialized");
 

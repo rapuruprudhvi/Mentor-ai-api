@@ -4,6 +4,7 @@ import { InterviewPrompt } from "../entity/InterviewPrompt";
 import { randomUUID } from "crypto";
 import { InterviewPromptDto } from "../dto/interview.prompt.dto";
 import type { Repository } from "typeorm";
+import { getAnswerFromOpenAI } from "./openai.service";
 
 @Injectable()
 export class InterviewPromptService {
@@ -25,19 +26,21 @@ export class InterviewPromptService {
   }
 
 
-  // async update(
-  //   promptId: string,
-  //   fullAnswer: string
-  // ): Promise<InterviewPrompt | null> {
-  //   const prompt = await this.repo.findOne({ where: { id: promptId } });
+  async update(
+  promptId: string,
+  fullAnswer: string
+): Promise<InterviewPrompt | null> {
+  const prompt = await this.repo.findOne({ where: { id: promptId } });
 
-  //   return prompts.map((p) => ({
-  //     id: p.id,
-  //     question: p.question,
-  //     answer: p.answer,
-  //     createdAt: p.createdAt.toISOString(),
-  //   }));
-  // }
+  if (!prompt) return null;
+
+  prompt.answer = fullAnswer;
+
+  await this.repo.save(prompt);
+
+  return prompt;
+}
+
 
   async getPromptsByUserId(userId: string): Promise<InterviewPromptDto[]> {
     const prompts = await this.repo.find({

@@ -164,9 +164,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-      # get all question and answers
-    /interview-prompts:
     get:
       tags:
         - Interview
@@ -187,8 +184,94 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/interview/{sessionId}:
+    post:
+      tags:
+        - Interview
+      summary: interview session
+      operationId: AskInterviewQuestion
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InterviewPromptRequest"
+      responses:
+        "200":
+          description: Successfully returned generated answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewPromptResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      tags:
+        - Interview
+      summary: Get each interview session individually
+      operationId: GetInterviewQuestions
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved interview questions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+                  questions:
+                    $ref: "#/components/schemas/InterviewPromptListResponse"
+                  count:
+                    type: integer
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Interview session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Failed to retrieve interview questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   # Authentication and Signup
-  /api/auth/signup:
+    /api/auth/signup:
     post:
       tags:
         - Auth
@@ -725,6 +808,57 @@ components:
         message:
           type: string
           example: "Something went wrong."
+
+          components:
+  #InterviewPromptRequest
+    InterviewPromptRequest:
+      type: object
+      required:
+        - question
+        - interviewType
+      properties:
+        question:
+          type: string
+        interviewType:
+          type: string
+          enum:
+            - SYSTEM_DESIGN
+            - BEHAVIORAL
+            - CODING
+
+    InterviewPromptResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        question:
+          type: string
+        answer:
+          type: string
+        type:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+        interviewSessionId:
+          type: string
+
+    InterviewPromptListResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/InterviewPromptResponse"
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
 
     # Schema for user signup response
 
