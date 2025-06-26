@@ -17,8 +17,9 @@ export const passportStrategy = (passport: PassportStatic): void => {
       try {
         const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
         const blacklistedRepo = AppDataSource.getRepository(BlacklistedToken);
-
+        console.log("JWT Payload:", token, jwt_payload);
         if (token) {
+        
           const blacklisted = await blacklistedRepo.findOneBy({ token });
           if (blacklisted) {
             return done(null, false); // token is blacklisted
@@ -26,7 +27,10 @@ export const passportStrategy = (passport: PassportStatic): void => {
         }
 
         const userRepo = AppDataSource.getRepository(User);
-        const user = await userRepo.findOneBy({ id: jwt_payload.id });
+        const user = jwt_payload.id
+          ? await userRepo.findOneBy({ id: jwt_payload.id })
+          : await userRepo.findOneBy({ email: jwt_payload.email });
+
 
         if (!user) return done(null, false);
         return done(null, user);
