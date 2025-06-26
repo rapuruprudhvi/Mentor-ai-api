@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { generateToken } from '../utils/jwt.utils';
-import { SignupResponse, signupSchema } from '../dto/auth.validation';
+import { SignupResponse, signupSchema, UserResponse } from '../dto/auth.validation';
 import { UserService } from '../service/user.service';
 import { Injectable } from '../decorator/injectable.decorator';
 import { RouteHandler } from '../types/handler';
@@ -10,7 +10,7 @@ import { ApiResponse } from '../types/api.responce';
 export class SignupHandler implements RouteHandler {
   constructor(private readonly userService: UserService) { }
 
-  async handle(req: Request, res: Response<ApiResponse<SignupResponse>>) {
+  async handle(req: Request, res: Response<ApiResponse<{ token: string, user: UserResponse }>>) {
     try {
       const { error, data: body } = signupSchema.safeParse(req.body);
 
@@ -34,10 +34,13 @@ export class SignupHandler implements RouteHandler {
       //     error: 'Please verify your email to complete registration',
       //   });
       // }
+      
 
       const token = generateToken({ id: user.id, email: user.email });
 
-      const response: SignupResponse = {
+      
+
+      const response = {
         message: 'User registered successfully',
         token,
         user: {
@@ -51,9 +54,10 @@ export class SignupHandler implements RouteHandler {
 
       return res.status(201).json({ data: response });
 
+
     } catch (error) {
-      return res.status(500).json({
-        error: (error instanceof Error ? error.message : 'Internal server error'),
+      return res.status(400).json({
+        error: (error instanceof Error ? error.message : 'Something Went Wrong'),
       });
     }
   }
