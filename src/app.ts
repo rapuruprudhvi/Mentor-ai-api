@@ -16,7 +16,7 @@ import Container from "typedi";
 import { passportStrategy } from "./config/passport";
 import { ErrorMiddleware } from "./middleware/error.middleware";
 import { logger } from "./config/logger.config";
-import userrouter from "./router/user.router";
+import authRouter from "./router/user.router";
 import interviewPromptsRouter from "./router/open.ai.router";
 import openApiRouter from "./router/openapi.router";
 import interviewsRouter from "./router/interview.router";
@@ -27,7 +27,7 @@ export const createApp = (): http.Server => {
   app.use(compression());
   app.use(cors());
   app.use(urlencoded({ extended: true }));
-
+  app.use(json());
   app.use(express.json());
 
   morgan.token("headers", (req: Request) => {
@@ -57,7 +57,7 @@ export const createApp = (): http.Server => {
   console.log("Passport strategy initialized");
 
   app.use("/api", openApiRouter);
-  app.use("/api/auth", userrouter);
+  app.use("/api/auth", authRouter);
   app.use("/api/payments", paymentRouter);
   app.use("/api/interview-prompts", interviewPromptsRouter);
   app.use("/api/interview", interviewsRouter);

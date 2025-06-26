@@ -149,4 +149,14 @@ export class UserService {
     await repo.save(user);
     return { user };
   }
+
+    async getUser(userId: string){
+    const userRepo = this.dataSource.getRepository(User);
+
+    const user = await userRepo.findOne({
+      where: { id: userId },
+    });
+
+    return user;
+  }
 }
