@@ -270,6 +270,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+#interview title
+  /api/interview/title:
+    get:
+      tags:
+        - Interview
+      summary: Get user's interview titles
+      description: Retrieve a list of interview sessions with their titles and creation dates.
+      operationId: getUserInterviewTitles
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved interview titles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/InterviewTitleResponse"
+        "401":
+          description: Unauthorized (JWT required)
+        "500":
+          description: Internal server error
+
   # Authentication and Signup
     /api/auth/signup:
     post:
