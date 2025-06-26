@@ -12,12 +12,11 @@ export class RequestResetHandler implements RouteHandler {
   constructor(private userService: UserService) { }
 
   async handle(req: Request, res: Response<ApiResponse<string>>) {
-    try {
       const { error, data: body } = requestPasswordResetSchema.safeParse(req.body);
 
       if (error) {
         return res.status(400).json({
-          error: 'Validation error',
+          error: error.errors[0]?.message || 'Validation error',
         });
       }
       const email = body.email;
@@ -30,8 +29,5 @@ export class RequestResetHandler implements RouteHandler {
       await sendPasswordResetEmail(email, token);
 
       return res.status(200).json({ data: token, message: "Reset password link sent to email" });
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message || "Internal server error" });
-    }
   }
 }
