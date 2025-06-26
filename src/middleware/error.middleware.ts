@@ -6,7 +6,7 @@ import { logger } from "../config/logger.config";
 @Injectable()
 export class ErrorMiddleware {
   handle(
-    error: Error,
+    error: any,
     req: Request,
     res: Response<ApiResponse<null>>,
     next: NextFunction,
@@ -17,8 +17,11 @@ export class ErrorMiddleware {
       return next(error);
     }
 
-    res.status(500).json({
-      error: "Internal Server Error",
+    const status = error.statusCode || 500;
+    const message = error.message || "Internal Server Error";
+
+    res.status(status).json({
+      error: message, 
     });
   }
 }
