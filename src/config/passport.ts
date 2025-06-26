@@ -17,8 +17,9 @@ export const passportStrategy = (passport: PassportStatic): void => {
       try {
         const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
         const blacklistedRepo = AppDataSource.getRepository(BlacklistedToken);
-
+        console.log("JWT Payload:", token, jwt_payload);
         if (token) {
+        
           const blacklisted = await blacklistedRepo.findOneBy({ token });
           if (blacklisted) {
             return done(null, false); // token is blacklisted
