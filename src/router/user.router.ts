@@ -8,7 +8,9 @@ import { VerifyOtpHandler } from '../handler/verify.otp.handler';
 import { SendOtpHandler } from '../handler/send.otp.handler';
 import { RequestResetHandler } from '../handler/request.reset.password.handler';
 import { ResetPasswordHandler } from '../handler/reset.password.handler';
-import { GetUserHandler } from '../handler/get.user.handler';
+import { GetUserHandler } from '../handler/get.authUser.handler';
+import { UpdateUserHandler } from '../handler/update.user.handler';
+import { UploadProfilePhotoMiddleware } from '../middleware/upload.middleware';
 
 
 const userRouter = Router({ mergeParams: true });
@@ -16,6 +18,11 @@ const userRouter = Router({ mergeParams: true });
 userRouter.post("/signOut", resolveRouteHandler(SignoutHandler));
 userRouter.post("/reset-password", resolveRouteHandler(ResetPasswordHandler));
 userRouter.get("/getUser", resolveRouteHandler(GetUserHandler));
+userRouter.put(
+  "/user/:userId",
+  resolveRouteHandler(UploadProfilePhotoMiddleware),
+  resolveRouteHandler(UpdateUserHandler)
+);
 
 
 const authRouter = Router({ mergeParams: true });
