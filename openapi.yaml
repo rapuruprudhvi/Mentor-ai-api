@@ -137,9 +137,168 @@ paths:
           description: User deleted successfully (No Content)
         "404":
           description: User not found
+    # interview prompts
+  /interview-prompts:
+    post:
+      tags:
+        - Interview
+      summary: Generate answer for interview question
+      description: Accepts a question and returns an AI-generated answer.
+      operationId: generateInterviewPrompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewPromptRequest'
+      responses:
+        '200':
+          description: Successfully generated answer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewPromptResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Interview
+      summary: Get all interview prompts
+      description: Returns a list of all stored interview prompts.
+      operationId: listInterviewPrompts
+      responses:
+        '200':
+          description: A list of interview prompts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewPromptListResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/interview/{sessionId}:
+    post:
+      tags:
+        - Interview
+      summary: interview session
+      operationId: AskInterviewQuestion
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InterviewPromptRequest"
+      responses:
+        "200":
+          description: Successfully returned generated answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewPromptResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      tags:
+        - Interview
+      summary: Get each interview session individually
+      operationId: GetInterviewQuestions
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved interview questions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+                  questions:
+                    $ref: "#/components/schemas/InterviewPromptListResponse"
+                  count:
+                    type: integer
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Interview session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Failed to retrieve interview questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+#interview title
+  /api/interview/title:
+    get:
+      tags:
+        - Interview
+      summary: Get user's interview titles
+      description: Retrieve a list of interview sessions with their titles and creation dates.
+      operationId: getUserInterviewTitles
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved interview titles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/InterviewTitleResponse"
+        "401":
+          description: Unauthorized (JWT required)
+        "500":
+          description: Internal server error
 
   # Authentication and Signup
-  /api/auth/signup:
+    /api/auth/signup:
     post:
       tags:
         - Auth
@@ -582,6 +741,153 @@ components:
           type: string
           format: date-time
           example: "2024-07-29T10:30:00Z"
+
+
+# InterviewPromptRequest
+    InterviewPromptRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          example: "What is Java?"
+
+    InterviewPromptResponse:
+      type: object
+      properties:
+        question:
+          type: string
+          example: "What is Java?"
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "dadef5c5b011435b9d6f751ae4"
+            question:
+              type: string
+              example: "What is Java?"
+            answer:
+              type: string
+              example: "Java is an object-oriented programming language..."
+            createdAt:
+              type: string
+              format: date-time
+              example: "2025-06-18T07:53:07.336Z"
+
+      # schema for to get all interview-prompts
+      
+    InterviewPromptRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          example: "What is Java?"
+
+    InterviewPromptResponse:
+      type: object
+      properties:
+        question:
+          type: string
+          example: "What is Java?"
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "dadef5c5b011435b9d6f751ae4"
+            question:
+              type: string
+              example: "What is Java?"
+            answer:
+              type: string
+              example: "Java is an object-oriented programming language..."
+            createdAt:
+              type: string
+              format: date-time
+              example: "2025-06-18T07:53:07.336Z"
+
+    InterviewPromptListResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            example: "7a461cb3c6644bf194dcdcc522"
+          question:
+            type: string
+            example: "What is Java?"
+          answer:
+            type: string
+            example: "Java is a programming language..."
+          createdAt:
+            type: string
+            format: date-time
+            example: "2025-06-23T10:54:19.561Z"
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Something went wrong."
+
+          components:
+  #InterviewPromptRequest
+    InterviewPromptRequest:
+      type: object
+      required:
+        - question
+        - interviewType
+      properties:
+        question:
+          type: string
+        interviewType:
+          type: string
+          enum:
+            - SYSTEM_DESIGN
+            - BEHAVIORAL
+            - CODING
+
+    InterviewPromptResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        question:
+          type: string
+        answer:
+          type: string
+        type:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+        interviewSessionId:
+          type: string
+
+    InterviewPromptListResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/InterviewPromptResponse"
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
+
+    # Schema for user signup response
 
     # Schema for user signup with Zod validation
     UserSignupZod:

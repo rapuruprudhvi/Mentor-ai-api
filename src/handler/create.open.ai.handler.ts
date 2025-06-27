@@ -5,10 +5,10 @@ import { getAnswerFromOpenAI } from "../service/openai.service";
 import { RouteHandler } from "../types/handler";
 import { Injectable } from "../decorator/injectable.decorator";
 
-
 @Injectable()
 export class CreateInterviewPromptHandler implements RouteHandler {
   constructor(private readonly promptService: InterviewPromptService) { }
+
   async handle(req: Request, res: Response): Promise<void> {
     const { error, data } = CreateInterviewPromptZodSchema.safeParse(req.body);
 
@@ -18,8 +18,15 @@ export class CreateInterviewPromptHandler implements RouteHandler {
     }
 
     const { question } = data;
+    const userId = (req.user as any)?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    
     const answer = await getAnswerFromOpenAI(question);
-    const savedPrompt = await this.promptService.create(question, answer);
+    const savedPrompt = await this.promptService.create(userId, question, answer);
 
     res.status(201).json({
       data: {
@@ -30,4 +37,4 @@ export class CreateInterviewPromptHandler implements RouteHandler {
       },
     });
   }
-} 
+}

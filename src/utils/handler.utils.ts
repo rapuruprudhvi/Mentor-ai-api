@@ -17,3 +17,12 @@ export const resolveRouteHandler = (
     return handler.handle(req, res, next);
   });
 };
+
+export const resolveMiddleware = (
+  MiddlewareClass: Constructable<{ handle: AsyncHandlerFn }>
+): AsyncHandlerFn => {
+  return asyncHandler((req: Request, res: Response, next: NextFunction) => {
+    const middlewareInstance = Container.get(MiddlewareClass);
+    return middlewareInstance.handle(req, res, next);
+  });
+};
