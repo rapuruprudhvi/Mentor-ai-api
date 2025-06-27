@@ -7,6 +7,11 @@ import { getAnswerFromOpenAI } from "./openai.service";
 import type { InterviewPromptService } from "./interview.prompt.service";
 import "reflect-metadata";
 import { InterviewAnswer, StartInterviewResult } from "../dto/interview.dto";
+import { InterviewPromptDto } from "../dto/interview.prompt.dto";
+import { InterviewPrompt } from "../entity/InterviewPrompt";
+import { customAlphabet } from "nanoid";
+
+const nanoid = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 26);
 
 @Injectable()
 export class InterviewService {
@@ -23,19 +28,9 @@ export class InterviewService {
     const sessionRepository = AppDataSource.getRepository(InterviewSession);
 
     const user = await userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
 
-    if (user.interviewCredits <= 0) {
-      throw new Error(
-        "Insufficient credits. Please purchase more credits to continue."
-      );
-    }
-
-    let interview = await interviewRepository.findOne({
-      where: { title, userId },
-    });
+    let interview = await interviewRepository.findOne({ where: { title, userId } });
 
     if (!interview) {
       interview = new Interview();
@@ -61,73 +56,88 @@ export class InterviewService {
     };
   }
 
-  async processQuestion(
-    sessionId: string,
-    question: string
-  ): Promise<InterviewAnswer> {
+  async processQuestion(sessionId: string, question: string): Promise<InterviewAnswer> {
     const sessionRepository = AppDataSource.getRepository(InterviewSession);
-    const session = await sessionRepository.findOne({
-      where: { id: sessionId },
-    });
+    const promptRepository = AppDataSource.getRepository(InterviewPrompt);
 
+    const session = await sessionRepository.findOne({ where: { id: sessionId } });
     if (!session || session.status !== "active") {
       throw new Error("Invalid or inactive session");
     }
 
+    const userId = session.userId;
     const startTime = Date.now();
 
     try {
-      const existingPrompt = await this.interviewPromptService.findByQuestion(
-        question
-      );
+      // Check ONLY for existing question in this specific session
+      let existingPrompt = await promptRepository.findOne({
+        where: { 
+          sessionId: sessionId,
+          question: question 
+        }
+      });
 
       let aiAnswer: string;
       let promptId: string;
 
       if (existingPrompt) {
+        // Use existing answer from the same session
         aiAnswer = existingPrompt.answer;
         promptId = existingPrompt.id;
+        console.log('Using existing prompt from same session:', promptId);
       } else {
+        // Always get fresh answer and create new record for this session
         aiAnswer = await getAnswerFromOpenAI(question);
-        const newPrompt = await this.interviewPromptService.create(
-          question,
-          aiAnswer
-        );
-        promptId = newPrompt.id;
+
+        // Create new prompt record for this session
+        const newPrompt = new InterviewPrompt();
+        newPrompt.id = nanoid();
+        newPrompt.userId = userId;
+        newPrompt.sessionId = sessionId; // ✅ Ensure sessionId is properly set
+        newPrompt.question = question;
+        newPrompt.answer = aiAnswer;
+        newPrompt.createdAt = new Date();
+
+        console.log('Creating new prompt for sessionId:', sessionId);
+
+        const savedPrompt = await promptRepository.save(newPrompt);
+        promptId = savedPrompt.id;
+
+        // Verify the save operation
+        const verifyPrompt = await promptRepository.findOne({ where: { id: promptId } });
+        console.log('Verified saved prompt sessionId:', verifyPrompt?.sessionId);
       }
 
       const processingTime = Date.now() - startTime;
 
+      // Update session data
       const sessionData = session.sessionData || {
         questions: [],
         answers: [],
         prompts: [],
       };
+
       sessionData.questions.push({
         question,
         timestamp: Date.now(),
       });
+
       sessionData.answers.push({
         answer: aiAnswer,
         timestamp: Date.now(),
         processingTime,
         promptId,
       });
-      sessionData.prompts = sessionData.prompts || [];
+
       sessionData.prompts.push(promptId);
 
       session.sessionData = sessionData;
       await sessionRepository.save(session);
 
-      return {
-        answer: aiAnswer,
-        timestamp: Date.now(),
-        processingTime,
-        promptId,
-      };
+      return { answer: aiAnswer };
     } catch (error) {
       console.error("Error processing question:", error);
-      throw new Error("Failed to generate answer");
+      throw error;
     }
   }
 
@@ -136,29 +146,20 @@ export class InterviewService {
     const userRepository = AppDataSource.getRepository(User);
 
     await AppDataSource.transaction(async (transactionalEntityManager) => {
-      const session = await transactionalEntityManager.findOne(
-        InterviewSession,
-        {
-          where: { id: sessionId },
-        }
-      );
+      const session = await transactionalEntityManager.findOne(InterviewSession, {
+        where: { id: sessionId },
+      });
 
-      if (!session) {
-        throw new Error("Session not found");
-      }
+      if (!session) throw new Error("Session not found");
 
       const user = await transactionalEntityManager.findOne(User, {
         where: { id: session.userId },
       });
 
-      if (!user) {
-        throw new Error("User not found");
-      }
+      if (!user) throw new Error("User not found");
 
       const endTime = new Date();
-      const durationInSeconds = Math.floor(
-        (endTime.getTime() - session.startedAt.getTime()) / 1000
-      );
+      const durationInSeconds = Math.floor((endTime.getTime() - session.startedAt.getTime()) / 1000);
 
       session.status = "completed";
       session.endedAt = endTime;
@@ -192,9 +193,7 @@ export class InterviewService {
     const interviewRepository = AppDataSource.getRepository(Interview);
     const sessionRepository = AppDataSource.getRepository(InterviewSession);
 
-    const interview = await interviewRepository.findOne({
-      where: { id: interviewId },
-    });
+    const interview = await interviewRepository.findOne({ where: { id: interviewId } });
     const sessions = await sessionRepository.find({
       where: { interviewId },
       order: { createdAt: "DESC" },
@@ -222,9 +221,7 @@ export class InterviewService {
     const interviewRepository = AppDataSource.getRepository(Interview);
     const sessionRepository = AppDataSource.getRepository(InterviewSession);
 
-    const totalInterviews = await interviewRepository.count({
-      where: { userId },
-    });
+    const totalInterviews = await interviewRepository.count({ where: { userId } });
     const allSessions = await sessionRepository.find({ where: { userId } });
 
     const totalSessions = allSessions.length;
@@ -249,5 +246,51 @@ export class InterviewService {
       completedSessions,
       activeSessions,
     };
+  }
+
+  async getQuestionsBySession(sessionId: string): Promise<InterviewPromptDto[]> {
+    const repository = AppDataSource.getRepository(InterviewPrompt);
+
+    console.log('Fetching questions for sessionId:', sessionId); // Debug log
+
+    const prompts = await repository.find({
+      where: { sessionId },
+      order: { createdAt: "ASC" },
+    });
+
+    console.log('Found prompts:', prompts.length); // Debug log
+
+    return prompts.map((p) => ({
+      id: p.id,
+      question: p.question,
+      answer: p.answer,
+      createdAt: p.createdAt.toISOString(),
+    }));
+  }
+
+  // ✅ Add this new method to get questions from session data as fallback
+  async getQuestionsFromSessionData(sessionId: string): Promise<InterviewPromptDto[]> {
+    const sessionRepository = AppDataSource.getRepository(InterviewSession);
+    
+    const session = await sessionRepository.findOne({ where: { id: sessionId } });
+    if (!session || !session.sessionData) {
+      return [];
+    }
+
+    const { questions, answers } = session.sessionData;
+    
+    // Combine questions and answers based on timestamp or index
+    const combined: InterviewPromptDto[] = [];
+    
+    for (let i = 0; i < Math.min(questions.length, answers.length); i++) {
+      combined.push({
+        id: answers[i].promptId || `temp-${i}`,
+        question: questions[i].question,
+        answer: answers[i].answer,
+        createdAt: new Date(questions[i].timestamp).toISOString(),
+      });
+    }
+
+    return combined;
   }
 }
