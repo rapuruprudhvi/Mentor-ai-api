@@ -65,6 +65,7 @@ export interface UserResponse {
   name: string;
   email: string;
   mobileNumber: string;
+  interviewCredits?: number;
   createdAt?: Date;
 }
 
