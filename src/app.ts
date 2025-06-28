@@ -53,6 +53,7 @@ export const createApp = (): http.Server => {
   );
 
   passportStrategy(passport);
+
   app.use(passport.initialize());
   console.log("Passport strategy initialized");
 
@@ -61,6 +62,7 @@ export const createApp = (): http.Server => {
   app.use("/api/payments", paymentRouter);
   app.use("/api/interview-prompts", interviewPromptsRouter);
   app.use("/api/interview", interviewsRouter);
+  
 
   const globalErrorHandler = Container.get(ErrorMiddleware);
   app.use(globalErrorHandler.handle.bind(globalErrorHandler));
