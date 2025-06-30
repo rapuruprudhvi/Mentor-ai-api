@@ -27,6 +27,7 @@ export class GetUserHandler implements RouteHandler {
       name: dbUser.name,
       email: dbUser.email,
       mobileNumber: dbUser.mobileNumber,
+      interviewCredits:dbUser.interviewCredits,
       createdAt: dbUser.createdAt,
     };
 
