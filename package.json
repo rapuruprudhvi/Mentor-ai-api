@@ -38,6 +38,7 @@
     "reflect-metadata": "^0.2.2",
     "stripe": "^18.2.1",
     "swagger-ui-express": "^5.0.1",
+    "tsyringe": "^4.10.0",
     "typedi": "^0.10.0",
     "typeorm": "^0.3.24",
     "ulid": "^3.0.1",

@@ -184,8 +184,8 @@ export class UserService {
     if (updates.email) user.email = updates.email;
     if (updates.mobileNumber) user.mobileNumber = updates.mobileNumber;
     if (updates.role) user.role = updates.role;
-    if (updates.profilePhoto) user.profilePicture = updates.profilePhoto;
-
+    if (updates.resume) user.resume = updates.resume;
+    
     await userRepo.save(user);
     return user;
   }

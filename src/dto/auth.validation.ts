@@ -57,6 +57,7 @@ export interface UserResponse {
   role?: string;
   profilePicture?: string;
   interviewCredits?: number;
+  resume?: string | null
   createdAt?: Date;
 }
 
@@ -111,7 +112,7 @@ export const updateUserSchema = z
       .length(10, "Mobile number must be exactly 10 digits")
       .optional(),
     role: z.string().optional(),
-    profilePhoto: z.string().optional(),
+    resume: z.string().optional(),
     currentPassword: z
       .string()
       .min(6, "Current password must be at least 6 characters")
