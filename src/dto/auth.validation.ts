@@ -64,7 +64,10 @@ export interface UserResponse {
   id: string;
   name: string;
   email: string;
-  mobileNumber: string;
+  mobileNumber?: string;
+  role?:string;
+  profilePicture?:string;
+  interviewCredits?:number;
   createdAt?: Date;
 }
 
@@ -100,3 +103,34 @@ export const resetPasswordSchema = z.object({
 
 export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const updateUserSchema = z
+  .object({
+    name: z.string().min(3, { message: "Name must be at least 3 characters" }).optional(),
+    email: z.string().email("Invalid email format").optional(),
+    mobileNumber: z.string().length(10, "Mobile number must be exactly 10 digits").optional(),
+    role: z.string().optional(),
+    profilePhoto: z.string().optional(),
+    currentPassword: z.string().min(6, "Current password must be at least 6 characters").optional(),
+    changePassword: z.string().min(6, "New password must be at least 6 characters").optional(),
+    confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters").optional(),
+  })
+  .refine((data) => {
+    const anyPasswordField = data.currentPassword || data.changePassword || data.confirmPassword;
+    const allProvided = data.currentPassword && data.changePassword && data.confirmPassword;
+    return !anyPasswordField || allProvided;
+  }, {
+    message: "All password fields (current, new, confirm) are required to change password",
+    path: ["currentPassword"],
+  })
+  .refine((data) => {
+    if (data.changePassword && data.confirmPassword) {
+      return data.changePassword === data.confirmPassword;
+    }
+    return true;
+  }, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
