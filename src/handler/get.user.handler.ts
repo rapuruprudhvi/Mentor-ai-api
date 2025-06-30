@@ -25,9 +25,9 @@ export class GetUserHandler implements RouteHandler {
     const userResponse: UserResponse = {
       id: dbUser.id,
       name: dbUser.name,
-      email: dbUser.email,
+      email: dbUser.email,  
       mobileNumber: dbUser.mobileNumber,
-      interviewCredits:dbUser.interviewCredits,
+      interviewCredits: dbUser.interviewCredits,
       createdAt: dbUser.createdAt,
     };
 
