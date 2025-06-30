@@ -8,6 +8,10 @@ import { generateOTP } from "../utils/otp.utils";
 import { isEmail, sendVerificationEmail } from "../utils/mail.utils";
 import { isMobile, sendOtpToMobile } from '../utils/sms.utils';
 import { UpdateUserInput } from '../dto/auth.validation';
+import { Payment } from '../entity/payment.entity';
+import { Interview } from '../entity/interview.entity';
+import { InterviewSession } from '../entity/interview.session.entity';
+import { InterviewPrompt } from '../entity/InterviewPrompt';
 
 
 type OtpEntry = {
@@ -163,11 +167,9 @@ export class UserService {
 
   async updateUser(userId: string, updates: UpdateUserInput) {
     const userRepo = this.dataSource.getRepository(User);
-    console.log("userRepo",userRepo)
     const user = await this.getUserById(userId)
     if (!user) throw new Error("User not found");
 
-    // 🔐 Handle password update
     if (updates.currentPassword && updates.changePassword) {
       const isSame = await bcrypt.compare(updates.currentPassword, user.password);
       if (!isSame) throw new Error("Current password is incorrect");
@@ -178,7 +180,6 @@ export class UserService {
       user.password = await bcrypt.hash(updates.changePassword, 10);
     }
 
-    // ✅ Update other optional fields
     if (updates.name) user.name = updates.name;
     if (updates.email) user.email = updates.email;
     if (updates.mobileNumber) user.mobileNumber = updates.mobileNumber;
@@ -187,5 +188,18 @@ export class UserService {
 
     await userRepo.save(user);
     return user;
+  }
+
+  async deleteUser(userId: string) {
+    const user = await this.getUserById(userId);
+    if (!user) throw new Error("User not found");
+
+    return await this.dataSource.transaction(async (manager) => {
+      await manager.getRepository(InterviewPrompt).delete({ userId });
+      await manager.getRepository(InterviewSession).delete({ userId });
+      await manager.getRepository(Interview).delete({ userId });
+      await manager.getRepository(Payment).delete({ userId });
+      await manager.getRepository(User).delete({ id: userId });
+    });
   }
 }

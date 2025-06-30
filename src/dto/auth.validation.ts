@@ -129,7 +129,7 @@ export const updateUserSchema = z
     }
     return true;
   }, {
-    message: "New passwords do not match",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
