@@ -7,6 +7,11 @@ import { BlacklistedToken } from '../entity/blacklisted-token.entity';
 import { generateOTP } from "../utils/otp.utils";
 import { isEmail, sendVerificationEmail } from "../utils/mail.utils";
 import { isMobile, sendOtpToMobile } from '../utils/sms.utils';
+import { UpdateUserInput } from '../dto/auth.validation';
+import { Payment } from '../entity/payment.entity';
+import { Interview } from '../entity/interview.entity';
+import { InterviewSession } from '../entity/interview.session.entity';
+import { InterviewPrompt } from '../entity/InterviewPrompt';
 
 
 type OtpEntry = {
@@ -150,7 +155,7 @@ export class UserService {
     return { user };
   }
 
-    async getUser(userId: string){
+  async getUser(userId: string) {
     const userRepo = this.dataSource.getRepository(User);
 
     const user = await userRepo.findOne({
@@ -158,5 +163,43 @@ export class UserService {
     });
 
     return user;
+  }
+
+  async updateUser(userId: string, updates: UpdateUserInput) {
+    const userRepo = this.dataSource.getRepository(User);
+    const user = await this.getUserById(userId)
+    if (!user) throw new Error("User not found");
+
+    if (updates.currentPassword && updates.changePassword) {
+      const isSame = await bcrypt.compare(updates.currentPassword, user.password);
+      if (!isSame) throw new Error("Current password is incorrect");
+
+      const isIdentical = await bcrypt.compare(updates.changePassword, user.password);
+      if (isIdentical) throw new Error("New password must be different from current password");
+
+      user.password = await bcrypt.hash(updates.changePassword, 10);
+    }
+
+    if (updates.name) user.name = updates.name;
+    if (updates.email) user.email = updates.email;
+    if (updates.mobileNumber) user.mobileNumber = updates.mobileNumber;
+    if (updates.role) user.role = updates.role;
+    if (updates.profilePhoto) user.profilePicture = updates.profilePhoto;
+
+    await userRepo.save(user);
+    return user;
+  }
+
+  async deleteUser(userId: string) {
+    const user = await this.getUserById(userId);
+    if (!user) throw new Error("User not found");
+
+    return await this.dataSource.transaction(async (manager) => {
+      await manager.getRepository(InterviewPrompt).delete({ userId });
+      await manager.getRepository(InterviewSession).delete({ userId });
+      await manager.getRepository(Interview).delete({ userId });
+      await manager.getRepository(Payment).delete({ userId });
+      await manager.getRepository(User).delete({ id: userId });
+    });
   }
 }

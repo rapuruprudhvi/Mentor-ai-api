@@ -137,7 +137,7 @@ paths:
           description: User deleted successfully (No Content)
         "404":
           description: User not found
-    # interview prompts
+  # interview prompts
   /interview-prompts:
     post:
       tags:
@@ -270,7 +270,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-#interview title
+  #interview title
   /api/interview/title:
     get:
       tags:
@@ -298,7 +298,7 @@ paths:
           description: Internal server error
 
   # Authentication and Signup
-    /api/auth/signup:
+  /api/auth/signup:
     post:
       tags:
         - Auth
@@ -641,6 +641,123 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PlansResponse"
+  #user crud operations
+  #get user
+  /api/auth/getUser:
+    get:
+      summary: Get current authenticated user
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Authenticated user retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSuccessResponse'
+        '401':
+          description: Unauthorized – Token missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserErrorResponse'
+  #update user             
+  /api/auth/user/{userId}:
+    put:
+      summary: Update user profile (including password & profile photo)
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 01HYZBGXKZ6BRYBQXD6GV4MB5W
+          description: ULID of the user to update
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserSuccessResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserErrorResponse'
+  #delete user
+    delete:
+      summary: Delete a user and all associated data
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 01HYZBGXKZ6BRYBQXD6GV4MB5W
+          description: ULID of the user to delete
+      responses:
+        '200':
+          description: User and related data deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteUserSuccessResponse'
+        '400':
+          description: Validation error (e.g., invalid ULID)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteUserErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteUserErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteUserErrorResponse'
 
 # Reusable Components
 components:
@@ -743,7 +860,7 @@ components:
           example: "2024-07-29T10:30:00Z"
 
 
-# InterviewPromptRequest
+    # InterviewPromptRequest
     InterviewPromptRequest:
       type: object
       required:
@@ -776,8 +893,7 @@ components:
               format: date-time
               example: "2025-06-18T07:53:07.336Z"
 
-      # schema for to get all interview-prompts
-      
+    # schema for to get all interview-prompts 
     InterviewPromptRequest:
       type: object
       required:
@@ -837,7 +953,7 @@ components:
           example: "Something went wrong."
 
           components:
-  #InterviewPromptRequest
+    #InterviewPromptRequest
     InterviewPromptRequest:
       type: object
       required:
@@ -885,9 +1001,6 @@ components:
       properties:
         message:
           type: string
-
-
-    # Schema for user signup response
 
     # Schema for user signup with Zod validation
     UserSignupZod:
@@ -1328,3 +1441,122 @@ components:
         error:
           type: string
           example: "Invalid input or token"
+    
+    #get User Schema
+    schemas:
+    UserSuccessResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UserResponse'
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "01HYZBGXKZ6BRYBQXD6GV4MB5W"
+        name:
+          type: string
+          example: "Madduru Naveen"
+        email:
+          type: string
+          example: "jon@example.com"
+        mobileNumber:
+          type: string
+          example: "1234567890"
+        interviewCredits:
+          type: integer
+          example: 5
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-06-20T12:34:56.789Z"
+
+    GetUserErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Unauthorized"
+
+    #Update User
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Madduru Naveen
+        email:
+          type: string
+          format: email
+          example: naveen@example.com
+        mobileNumber:
+          type: string
+          example: "+918618362975"
+        role:
+          type: string
+          example: "user"
+        currentPassword:
+          type: string
+          example: "oldPass123"
+        changePassword:
+          type: string
+          example: "newPass456"
+        profilePhoto:
+          type: string
+          format: binary
+      required: []
+
+    UpdateUserSuccessResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: 01HYZBGXKZ6BRYBQXD6GV4MB5W
+            name:
+              type: string
+              example: Madduru Naveen
+            email:
+              type: string
+              example: naveen@example.com
+            mobileNumber:
+              type: string
+              example: "+918618362975"
+            role:
+              type: string
+              example: user
+            profilePicture:
+              type: string
+              example: "https://cdn.example.com/uploads/naveen.jpg"
+        message:
+          type: string
+          example: profile updated successfully
+
+    UpdateUserErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: User not found
+
+    #Delete user
+    DeleteUserSuccessResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: User account and associated data deleted
+
+    DeleteUserErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: User not foun
