@@ -32,6 +32,12 @@ export class User {
   @Column({ default: false })
   mobileNumberVerified: boolean;
 
+  @Column({ nullable: true })
+  resume: string;
+
+  @Column({ nullable: true })
+  role: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
