@@ -758,6 +758,65 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeleteUserErrorResponse'
+  #createTicket
+  /api/auth/createTicket:
+    post:
+      tags:
+        - Support Ticket
+      summary: Create a new support ticket
+      description: Allows an authenticated user to create a support/help ticket.
+      operationId: createSupportTicket
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSupportTicketInput'
+      responses:
+        '201':
+          description: Support ticket created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSupportTicketResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTicketErrorResponse'
+  #get ticket 
+  /api/auth/ticket/{ticketId}:
+    get:
+      tags:
+        - Support Ticket
+      summary: View a support ticket by ID
+      description: Returns ticket and user info. No authentication required.
+      operationId: getSupportTicketById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Ticket ID (UUID)
+      responses:
+        '200':
+          description: Ticket retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ViewSupportTicketResponse'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ViewTicketErrorResponse'
+
+
 
 # Reusable Components
 components:
@@ -1522,10 +1581,10 @@ components:
               example: Madduru Naveen
             email:
               type: string
-              example: naveen@example.com
+              example: john@example.com
             mobileNumber:
               type: string
-              example: "+918618362975"
+              example: "9876543212"
             role:
               type: string
               example: user
@@ -1560,3 +1619,76 @@ components:
         error:
           type: string
           example: User not foun
+
+  #Support Ticket
+      CreateSupportTicketInput:
+      type: object
+      required:
+        - subject
+        - message
+      properties:
+        subject:
+          type: string
+          example: "Error in update password"
+        message:
+          type: string
+          example: "When I try to update my password, I get a server error."
+
+    CreateSupportTicketResponse:
+      type: object
+      properties:
+        data:
+          type: string
+          example: "Support ticket submitted successfully"
+
+    CreateTicketErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Ticket not found"
+
+    ViewSupportTicketResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            ticket:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                subject:
+                  type: string
+                message:
+                  type: string
+                status:
+                  type: string
+                  enum: [open, in_progress, resolved]
+                createdAt:
+                  type: string
+                  format: date-time
+                updatedAt:
+                  type: string
+                  format: date-time
+                userId:
+                  type: string
+            user:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                email:
+                  type: string
+
+    ViewTicketErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Ticket not found"
