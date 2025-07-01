@@ -33,7 +33,7 @@ export class User {
   mobileNumberVerified: boolean;
 
   @Column({ nullable: true })
-  resume: string;
+  resume?: string;
 
   @Column({ nullable: true })
   role: string;

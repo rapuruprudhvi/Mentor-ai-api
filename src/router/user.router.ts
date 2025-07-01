@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { resolveRouteHandler } from "../utils/handler.utils";
+import { resolveMiddleware, resolveRouteHandler } from "../utils/handler.utils";
 import { SignoutHandler } from "../handler/Signout.handler";
 import { SignupHandler } from "../handler/signup.handler";
 import { SigninHandler } from "../handler/signin.handler";
@@ -11,21 +11,27 @@ import { ResetPasswordHandler } from "../handler/reset.password.handler";
 import { GetUserHandler } from "../handler/get.user.handler";
 import { UpdateUserHandler } from "../handler/update.user.handler";
 
-import { ResumeUploadMiddleware } from "../middleware/resume-upload.middleware";
 import { DeleteUserHandler } from "../handler/delete.user.handler";
+import { ResumeUploadHandler } from "../handler/resume-upload.handler";
+import { ResumeUploadMiddleware } from "../middleware/resume-upload.middleware";
+
+
 
 const userRouter = Router({ mergeParams: true });
 
 userRouter.post("/signOut", resolveRouteHandler(SignoutHandler));
 userRouter.post("/reset-password", resolveRouteHandler(ResetPasswordHandler));
 userRouter.get("/getUser", resolveRouteHandler(GetUserHandler));
-
-userRouter.put(
-  "/user/:userId",
-  resolveRouteHandler(ResumeUploadMiddleware),
-  resolveRouteHandler(UpdateUserHandler)
+userRouter.put("/user/:userId", resolveRouteHandler(UpdateUserHandler))
+userRouter.post(
+  "/user/resume",
+  resolveMiddleware(ResumeUploadMiddleware),  
+  resolveRouteHandler(ResumeUploadHandler)     
 );
 
+
+// Resume upload route (separate from user update)
+// userRouter.post("/user/resume", resolveRouteHandler(ResumeUploadMiddleware), resolveRouteHandler(ResumeUploadHandler))
 userRouter.delete("/user/:userId", resolveRouteHandler(DeleteUserHandler));
 
 const authRouter = Router({ mergeParams: true });

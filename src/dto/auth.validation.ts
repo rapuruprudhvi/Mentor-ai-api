@@ -53,12 +53,19 @@ export interface UserResponse {
   id: string;
   name: string;
   email: string;
-  mobileNumber?: string;
-  role?: string;
-  profilePicture?: string;
+  mobileNumber: string;
   interviewCredits?: number;
-  resume?: string | null
-  createdAt?: Date;
+  resume?: string;
+  resumeInfo?: {
+    id: string;
+    originalName: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    createdAt: Date;
+  } | null;
+  role?: string;
+  createdAt: Date;
 }
 
 export interface SignupResponse {

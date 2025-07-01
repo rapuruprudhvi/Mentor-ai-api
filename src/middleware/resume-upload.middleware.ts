@@ -1,64 +1,172 @@
-import type { Request, Response, NextFunction } from "express"
-import multer from "multer"
-import path from "path"
-import { ulid } from "ulid"
-import { Injectable } from "../decorator/injectable.decorator"
-import type { RouteHandler } from "../types/handler"
-import type { Express } from "express" 
+// import type { Request, Response, NextFunction } from "express";
+// import multer from "multer";
+// import path from "path";
+// import { ulid } from "ulid";
+// import fs from "fs";
+// import { Injectable } from "../decorator/injectable.decorator";
+// import type { RouteHandler } from "../types/handler";
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/resumes/") 
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${ulid()}-${Date.now()}${path.extname(file.originalname)}`
-    cb(null, uniqueName)
-  },
-})
+// // 1. Create uploads directory if not exists
+// const uploadDir = path.join(__dirname, "..", "..", "uploads", "resumes");
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir, { recursive: true });
+// }
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  
-  const allowedTypes = [".pdf", ".doc", ".docx"]
-  const fileExtension = path.extname(file.originalname).toLowerCase()
+// // 2. Multer configuration
+// const storage = multer.diskStorage({
+//   destination: (_, __, cb) => cb(null, uploadDir),
+//   filename: (_, file, cb) => {
+//     const uniqueName = `${ulid()}-${Date.now()}${path.extname(file.originalname)}`;
+//     cb(null, uniqueName);
+//   },
+// });
 
-  if (allowedTypes.includes(fileExtension)) {
-    cb(null, true)
-  } else {
-    cb(new Error("Only PDF, DOC, and DOCX files are allowed for resume upload"))
-  }
-}
+// const upload = multer({
+//   storage,
+//   fileFilter: (_, file, cb) => {
+//     const allowed = [".pdf", ".doc", ".docx"];
+//     const ext = path.extname(file.originalname).toLowerCase();
+//     if (allowed.includes(ext)) cb(null, true);
+//     else cb(new Error("Only PDF, DOC, and DOCX files are allowed"));
+//   },
+//   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+// });
 
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, 
-  },
-})
+// // 3. Middleware
+// @Injectable()
+// export class ResumeUploadMiddleware implements RouteHandler {
+//   async handle(req: Request, res: Response, next: NextFunction): Promise<void> {
+//     console.log("📦 Middleware reached: Handling file upload");
+
+//     const uploadSingle = upload.single("resume");
+
+//     uploadSingle(req, res, (err) => {
+//       if (err) {
+//         console.error("❌ Multer error:", err.message);
+//         return res.status(400).json({ error: err.message });
+//       }
+
+//       if (!req.file) {
+//         console.error("❌ No file uploaded");
+//         return res.status(400).json({ error: "No resume file uploaded" });
+//       }
+
+//       console.log("✅ File uploaded:", req.file.filename);
+//       next(); // 💡 finally go to ResumeUploadHandler
+//     });
+//   }
+// }
+// src/middleware/resume-upload.middleware.ts
+import type { Request, Response, NextFunction } from "express";
+import multer from "multer";
+import path from "path";
+import { ulid } from "ulid";
+import fs from "fs";
+import { Injectable } from "../decorator/injectable.decorator";
+import type { RouteHandler } from "../types/handler";
 
 @Injectable()
 export class ResumeUploadMiddleware implements RouteHandler {
-  async handle(req: Request, res: Response, next: NextFunction) {
-    const uploadSingle = upload.single("resume")
+  private upload: multer.Multer;
 
-    uploadSingle(req, res, (err) => {
-      if (err) {
-        if (err instanceof multer.MulterError) {
-          if (err.code === "LIMIT_FILE_SIZE") {
-            return res.status(400).json({ error: "Resume file size should not exceed 5MB" })
-          }
+  constructor() {
+    this.initializeUpload();
+  }
+
+  private initializeUpload(): void {
+    const uploadDir = path.join(__dirname, "..", "..", "uploads", "resumes");
+    
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+      console.log("📁 Created upload directory:", uploadDir);
+    }
+
+    const storage = multer.diskStorage({
+      destination: (req, file, cb) => {
+        console.log("📂 Setting destination:", uploadDir);
+        cb(null, uploadDir);
+      },
+      filename: (req, file, cb) => {
+        const uniqueName = `${ulid()}-${Date.now()}${path.extname(file.originalname)}`;
+        console.log("📝 Generated filename:", uniqueName);
+        cb(null, uniqueName);
+      },
+    });
+
+    this.upload = multer({
+      storage,
+      fileFilter: (req, file, cb) => {
+        console.log("🔍 File filter - received file:", file.originalname, "mimetype:", file.mimetype);
+        
+        const allowed = [".pdf", ".doc", ".docx"];
+        const ext = path.extname(file.originalname).toLowerCase();
+        
+        if (allowed.includes(ext)) {
+          console.log("✅ File type allowed:", ext);
+          cb(null, true);
+        } else {
+          console.log("❌ File type not allowed:", ext);
+          cb(new Error(`Only PDF, DOC, and DOCX files are allowed. Received: ${ext}`));
         }
-        return res.status(400).json({ error: err.message })
+      },
+      limits: { 
+        fileSize: 5 * 1024 * 1024, // 5MB
+        fieldSize: 2 * 1024 * 1024 // 2MB for form fields
+      },
+    });
+  }
+
+  async handle(req: Request, res: Response, next: NextFunction): Promise<void> {
+    console.log("📦 Middleware reached: Handling file upload");
+    console.log("📋 Request headers:", req.headers["content-type"]);
+    console.log("📋 Request method:", req.method);
+    console.log("👤 User from auth:", req.user ? (req.user as any).id : "No user");
+
+    const uploadSingle = this.upload.single("resume");
+
+    uploadSingle(req, res, (err: any) => {
+      console.log("🎯 Upload callback triggered");
+      
+      if (err instanceof multer.MulterError) {
+        console.error("❌ Multer error:", err.code, err.message);
+        
+        switch (err.code) {
+          case 'LIMIT_FILE_SIZE':
+            return res.status(400).json({ 
+              error: "File too large. Maximum size is 5MB." 
+            });
+          case 'LIMIT_UNEXPECTED_FILE':
+            return res.status(400).json({ 
+              error: "Unexpected field name. Expected 'resume'." 
+            });
+          default:
+            return res.status(400).json({ 
+              error: `Upload error: ${err.message}` 
+            });
+        }
+      } else if (err) {
+        console.error("❌ Other upload error:", err.message);
+        return res.status(400).json({ error: err.message });
       }
 
-      // Add resume path to request body if file was uploaded
-      if (req.file) {
-          console.log("Resume uploaded:", req.file.path);
-
-        req.body.resume = req.file.path
+      if (!req.file) {
+        console.error("❌ No file uploaded");
+        console.log("📋 Request body:", req.body);
+        console.log("📋 Request files:", req.files);
+        return res.status(400).json({ 
+          error: "No resume file uploaded. Make sure the field name is 'resume' and the form has enctype='multipart/form-data'." 
+        });
       }
 
-      next()
-    })
+      console.log("✅ File uploaded successfully:");
+      console.log("  - Original name:", req.file.originalname);
+      console.log("  - Saved as:", req.file.filename);
+      console.log("  - Path:", req.file.path);
+      console.log("  - Size:", req.file.size, "bytes");
+      console.log("  - Mimetype:", req.file.mimetype);
+
+      console.log("📤 Proceeding to handler - req.file is populated");
+      next(); // Move to handler
+    });
   }
 }

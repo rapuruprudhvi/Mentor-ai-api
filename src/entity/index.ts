@@ -4,6 +4,6 @@ import { InterviewSession } from "./interview.session.entity";
 import { InterviewPrompt } from "./InterviewPrompt";
 import { Payment } from "./payment.entity";
 import { User } from "./user.entity";
+import { Resume } from "./resume.entity";
 
-
-export const entities = [ User, BlacklistedToken, Interview, Payment,InterviewPrompt, InterviewSession];
+export const entities = [ User, BlacklistedToken, Interview, Payment,InterviewPrompt, InterviewSession, Resume];
