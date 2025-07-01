@@ -124,6 +124,8 @@ To configure email functionality, you need to set up the following environment v
 ```env
 SMTP_EMAIL=your_email@example.com
 SMTP_PASSWORD=your_gmail_app_password
+DEVELOPER_RECEIVER="Enter the developers email"
+FRONTEND_URL="enter the your frontend url"
 ```
 steps to generate Gmail App Password:
 1. Go to your Google Account.(https://myaccount.google.com/)
