@@ -134,3 +134,25 @@ export const updateUserSchema = z
   });
 
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+
+export const createTicketSchema = z.object({
+  subject: z.string().min(3).max(100),
+  message: z.string().min(10), 
+});
+export type CreateTicketSchema = z.infer<typeof createTicketSchema>;
+
+export interface SupportTicketViewResponse {
+  ticket: {
+    id: string;
+    subject: string;
+    message: string;
+    status: string;
+    createdAt: Date;
+  };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    mobileNumber?:string;
+  };
+}

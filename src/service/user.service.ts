@@ -7,11 +7,12 @@ import { BlacklistedToken } from '../entity/blacklisted-token.entity';
 import { generateOTP } from "../utils/otp.utils";
 import { isEmail, sendVerificationEmail } from "../utils/mail.utils";
 import { isMobile, sendOtpToMobile } from '../utils/sms.utils';
-import { UpdateUserInput } from '../dto/auth.validation';
+import { CreateTicketSchema, UpdateUserInput } from '../dto/auth.validation';
 import { Payment } from '../entity/payment.entity';
 import { Interview } from '../entity/interview.entity';
 import { InterviewSession } from '../entity/interview.session.entity';
 import { InterviewPrompt } from '../entity/InterviewPrompt';
+import { SupportTicket } from '../entity/support.ticket.entity';
 
 
 type OtpEntry = {
@@ -201,5 +202,29 @@ export class UserService {
       await manager.getRepository(Payment).delete({ userId });
       await manager.getRepository(User).delete({ id: userId });
     });
+  }
+
+  async createSupportTicket(data: CreateTicketSchema, userId: string) {
+    const ticketRepo = this.dataSource.getRepository(SupportTicket);
+
+    const ticket = ticketRepo.create({
+      id: ulid(),
+      ...data,
+      userId,
+    });
+    return await ticketRepo.save(ticket);
+  }
+
+  async getSupportTicketWithUser(ticketId: string) {
+    const ticketRepo = this.dataSource.getRepository(SupportTicket);
+    const userRepo = this.dataSource.getRepository(User);
+
+    const ticket = await ticketRepo.findOneBy({ id: ticketId });
+    if (!ticket) return null;
+
+    const user = await userRepo.findOneBy({ id: ticket.userId });
+    if (!user) return null;
+
+    return { ticket, user };
   }
 }
