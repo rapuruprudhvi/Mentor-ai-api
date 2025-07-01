@@ -7,6 +7,8 @@ build/
 
 # dotenv
 .env
+.env.claude
+.env.ollama
 
 # logs
 npm-debug.log*

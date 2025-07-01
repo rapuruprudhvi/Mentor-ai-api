@@ -4,7 +4,7 @@ import { InterviewPrompt } from "../entity/InterviewPrompt";
 import { randomUUID } from "crypto";
 import { InterviewPromptDto } from "../dto/interview.prompt.dto";
 import type { Repository } from "typeorm";
-import { getAnswerFromOpenAI } from "./openai.service";
+import { getAnswerFromClaude } from "./openai.service";
 
 @Injectable()
 export class InterviewPromptService {

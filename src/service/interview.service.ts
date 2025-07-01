@@ -3,13 +3,13 @@ import { AppDataSource } from "../config/database";
 import { User } from "../entity/user.entity";
 import { Interview } from "../entity/interview.entity";
 import { InterviewSession } from "../entity/interview.session.entity";
-import { getAnswerFromOpenAI } from "./openai.service";
 import type { InterviewPromptService } from "./interview.prompt.service";
 import "reflect-metadata";
 import { InterviewAnswer, StartInterviewResult } from "../dto/interview.dto";
 import { InterviewPromptDto } from "../dto/interview.prompt.dto";
 import { InterviewPrompt } from "../entity/InterviewPrompt";
 import { customAlphabet } from "nanoid";
+import { getAnswerFromClaude } from "./openai.service";
 
 const nanoid = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 26);
 
@@ -87,7 +87,7 @@ export class InterviewService {
         console.log('Using existing prompt from same session:', promptId);
       } else {
         // Always get fresh answer and create new record for this session
-        aiAnswer = await getAnswerFromOpenAI(question);
+        aiAnswer = await getAnswerFromClaude(question);
 
         // Create new prompt record for this session
         const newPrompt = new InterviewPrompt();
