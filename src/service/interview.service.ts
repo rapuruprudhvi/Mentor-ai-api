@@ -3,13 +3,13 @@ import { AppDataSource } from "../config/database";
 import { User } from "../entity/user.entity";
 import { Interview } from "../entity/interview.entity";
 import { InterviewSession } from "../entity/interview.session.entity";
-import { getAnswerFromOpenAI } from "./openai.service";
 import type { InterviewPromptService } from "./interview.prompt.service";
 import "reflect-metadata";
 import { InterviewAnswer, StartInterviewResult } from "../dto/interview.dto";
 import { InterviewPromptDto } from "../dto/interview.prompt.dto";
 import { InterviewPrompt } from "../entity/InterviewPrompt";
 import { customAlphabet } from "nanoid";
+import { getAnswerFromOpenAI } from "./openai.service";
 
 const nanoid = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 26);
 

@@ -296,6 +296,100 @@ paths:
           description: Unauthorized (JWT required)
         "500":
           description: Internal server error
+          
+          # Start a new interview
+  /api/interview/start:
+    post:
+      tags:
+        - Interview
+      summary: Start a new interview session
+      description: Creates a new interview session with a given title for the authenticated user.
+      operationId: startInterview
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+              required:
+                - title
+      responses:
+        "200":
+          description: Interview started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        "400":
+          description: Title missing in request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+# End an interview
+  /api/interview/{sessionId}/end:
+    post:
+      tags:
+        - Interview
+      summary: End an existing interview session
+      description: Ends an interview session using the provided session ID.
+      operationId: endInterview
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Interview ended successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Failed to end interview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   # Authentication and Signup
   /api/auth/signup:
