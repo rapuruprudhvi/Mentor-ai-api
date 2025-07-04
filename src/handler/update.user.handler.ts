@@ -6,6 +6,7 @@ import { UserService } from "../service/user.service";
 import { ApiResponse } from "../types/api.responce";
 import { UlidIdSchema } from "../dto/id.validation";
 import z from "zod";
+import { verifyRecaptcha } from "../utils/recaptcha.utilis";
 
 const userIdSchema = z.object({
   userId: UlidIdSchema,
@@ -29,6 +30,17 @@ export class UpdateUserHandler implements RouteHandler {
     if (error) {
       return res.status(400).json({ error: error.errors[0].message });
     }
+
+    if (!updates.recaptchaToken) {
+      return res.status(400).json({ error: "reCAPTCHA token is required" });
+    }
+
+    const isHuman = await verifyRecaptcha(updates.recaptchaToken);
+
+    if (!isHuman) {
+      return res.status(403).json({ error: "reCAPTCHA verification failed" });
+    }
+
     const updatedUser = await this.userService.updateUser(params.userId, updates);
 
     return res.status(200).json({
