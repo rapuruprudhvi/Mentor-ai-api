@@ -5,6 +5,7 @@ import { ApiResponse } from "../types/api.responce";
 import { RouteHandler } from "../types/handler";
 import { generateToken } from "../utils/jwt.utils";
 import { signinSchema, UserResponse } from "../dto/auth.validation";
+import { verifyRecaptcha } from "../utils/recaptcha.utilis";
 
 @Injectable()
 export class SigninHandler implements RouteHandler {
@@ -18,6 +19,16 @@ export class SigninHandler implements RouteHandler {
         error:error.errors[0]?.message|| 'Validation error',
       });
       return;
+    }
+
+    if (!body.recaptchaToken) {
+      return res.status(400).json({ error: "reCAPTCHA token is required" });
+    }
+
+    const isHuman = await verifyRecaptcha(body.recaptchaToken);
+
+    if (!isHuman) {
+      return res.status(403).json({ error: "reCAPTCHA verification failed" });
     }
 
     const user = await this.userService.userSignIn(body.identifier, body.password);

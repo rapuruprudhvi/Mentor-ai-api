@@ -107,7 +107,8 @@ More test cards: Stripe Docs → Test Cards
 ### 📁 5. Start Server
 
 ```bash
-npm run dev
+For the run ollama use the       ---npm run dev:ollama
+for the run claude use the       ---npm run dev:claude
 ```
 
 You can access API at `http://localhost:4000`

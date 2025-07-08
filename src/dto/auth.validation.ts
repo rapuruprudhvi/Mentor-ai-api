@@ -29,6 +29,8 @@ export const signupSchema = z
     confirmPassword: z
       .string()
       .min(6, 'Confirm password must be at least 6 characters'),
+    
+    recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
 
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -56,6 +58,7 @@ export const signinSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters")
     .max(50, "Password must be less than 50 characters"),
+  recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
 });
 
 export type SigninInput = z.infer<typeof signinSchema>;
@@ -91,11 +94,13 @@ export type OtpSchema = z.infer<typeof otpSchema>;
 
 export const requestPasswordResetSchema = z.object({
   email: z.string().email("Invalid email"),
+  recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
 });
 
 export const resetPasswordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
+  recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -114,23 +119,37 @@ export const updateUserSchema = z
     currentPassword: z.string().min(6, "Current password must be at least 6 characters").optional(),
     changePassword: z.string().min(6, "New password must be at least 6 characters").optional(),
     confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters").optional(),
+    recaptchaToken: z.string().min(1, "reCAPTCHA token is required").optional(),
   })
-  .refine((data) => {
-    const anyPasswordField = data.currentPassword || data.changePassword || data.confirmPassword;
-    const allProvided = data.currentPassword && data.changePassword && data.confirmPassword;
-    return !anyPasswordField || allProvided;
-  }, {
-    message: "All password fields (current, new, confirm) are required to change password",
-    path: ["currentPassword"],
-  })
-  .refine((data) => {
-    if (data.changePassword && data.confirmPassword) {
-      return data.changePassword === data.confirmPassword;
+   .superRefine((data, ctx) => {
+    const isUpdatingPassword = !!(data.currentPassword || data.changePassword || data.confirmPassword);
+
+    // Validate all password fields are provided
+    if (isUpdatingPassword && (!data.currentPassword || !data.changePassword || !data.confirmPassword)) {
+      ctx.addIssue({
+        path: ['confirmPassword'],
+        code: z.ZodIssueCode.custom,
+        message: 'All password fields (current, new, confirm) are required to change password',
+      });
     }
-    return true;
-  }, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
+
+    // Validate new password and confirm password match
+    if (data.changePassword && data.confirmPassword && data.changePassword !== data.confirmPassword) {
+      ctx.addIssue({
+        path: ['confirmPassword'],
+        code: z.ZodIssueCode.custom,
+        message: 'Passwords do not match',
+      });
+    }
+
+    // Validate reCAPTCHA token if updating password
+    if (isUpdatingPassword && !data.recaptchaToken) {
+      ctx.addIssue({
+        path: ['recaptchaToken'],
+        code: z.ZodIssueCode.custom,
+        message: 'reCAPTCHA token is required',
+      });
+    }
   });
 
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;

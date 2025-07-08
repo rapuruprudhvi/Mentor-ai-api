@@ -11,7 +11,10 @@ import { InterviewPromptDto } from "../dto/interview.prompt.dto";
 import { InterviewPrompt } from "../entity/InterviewPrompt";
 import { customAlphabet } from "nanoid";
 
-const nanoid = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 26);
+const nanoid = customAlphabet(
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+  26
+);
 
 @Injectable()
 export class InterviewService {
@@ -30,7 +33,13 @@ export class InterviewService {
     const user = await userRepository.findOne({ where: { id: userId } });
     if (!user) throw new Error("User not found");
 
-    let interview = await interviewRepository.findOne({ where: { title, userId } });
+    if (user.interviewCredits <= 0) {
+      throw new Error("You have no interview credits left.");
+    }
+
+    let interview = await interviewRepository.findOne({
+      where: { title, userId },
+    });
 
     if (!interview) {
       interview = new Interview();
@@ -45,9 +54,13 @@ export class InterviewService {
     session.status = "active";
     session.startedAt = new Date();
     session.sessionData = { questions: [], answers: [], prompts: [] };
+    session.creditsUsed = 1;
     await sessionRepository.save(session);
 
-    const maxDurationMinutes = user.interviewCredits === 1 ? 5 : 120;
+    user.interviewCredits = Math.max(0, user.interviewCredits - 1);
+    await userRepository.save(user);
+
+    const maxDurationMinutes = user.interviewCredits === 0 ? 5 : 120;
 
     return {
       sessionId: session.id,
@@ -56,11 +69,16 @@ export class InterviewService {
     };
   }
 
-  async processQuestion(sessionId: string, question: string): Promise<InterviewAnswer> {
+  async processQuestion(
+    sessionId: string,
+    question: string
+  ): Promise<InterviewAnswer> {
     const sessionRepository = AppDataSource.getRepository(InterviewSession);
     const promptRepository = AppDataSource.getRepository(InterviewPrompt);
 
-    const session = await sessionRepository.findOne({ where: { id: sessionId } });
+    const session = await sessionRepository.findOne({
+      where: { id: sessionId },
+    });
     if (!session || session.status !== "active") {
       throw new Error("Invalid or inactive session");
     }
@@ -69,48 +87,47 @@ export class InterviewService {
     const startTime = Date.now();
 
     try {
-      // Check ONLY for existing question in this specific session
       let existingPrompt = await promptRepository.findOne({
-        where: { 
+        where: {
           sessionId: sessionId,
-          question: question 
-        }
+          question: question,
+        },
       });
 
       let aiAnswer: string;
       let promptId: string;
 
       if (existingPrompt) {
-        // Use existing answer from the same session
         aiAnswer = existingPrompt.answer;
         promptId = existingPrompt.id;
-        console.log('Using existing prompt from same session:', promptId);
+        console.log("Using existing prompt from same session:", promptId);
       } else {
-        // Always get fresh answer and create new record for this session
         aiAnswer = await getAnswerFromOpenAI(question);
 
-        // Create new prompt record for this session
         const newPrompt = new InterviewPrompt();
         newPrompt.id = nanoid();
         newPrompt.userId = userId;
-        newPrompt.sessionId = sessionId; // ✅ Ensure sessionId is properly set
+        newPrompt.sessionId = sessionId;
         newPrompt.question = question;
         newPrompt.answer = aiAnswer;
         newPrompt.createdAt = new Date();
 
-        console.log('Creating new prompt for sessionId:', sessionId);
+        console.log("Creating new prompt for sessionId:", sessionId);
 
         const savedPrompt = await promptRepository.save(newPrompt);
         promptId = savedPrompt.id;
 
-        // Verify the save operation
-        const verifyPrompt = await promptRepository.findOne({ where: { id: promptId } });
-        console.log('Verified saved prompt sessionId:', verifyPrompt?.sessionId);
+        const verifyPrompt = await promptRepository.findOne({
+          where: { id: promptId },
+        });
+        console.log(
+          "Verified saved prompt sessionId:",
+          verifyPrompt?.sessionId
+        );
       }
 
       const processingTime = Date.now() - startTime;
 
-      // Update session data
       const sessionData = session.sessionData || {
         questions: [],
         answers: [],
@@ -143,33 +160,28 @@ export class InterviewService {
 
   async endInterview(sessionId: string): Promise<void> {
     const sessionRepository = AppDataSource.getRepository(InterviewSession);
-    const userRepository = AppDataSource.getRepository(User);
 
     await AppDataSource.transaction(async (transactionalEntityManager) => {
-      const session = await transactionalEntityManager.findOne(InterviewSession, {
-        where: { id: sessionId },
-      });
+      const session = await transactionalEntityManager.findOne(
+        InterviewSession,
+        {
+          where: { id: sessionId },
+        }
+      );
 
       if (!session) throw new Error("Session not found");
 
-      const user = await transactionalEntityManager.findOne(User, {
-        where: { id: session.userId },
-      });
-
-      if (!user) throw new Error("User not found");
-
       const endTime = new Date();
-      const durationInSeconds = Math.floor((endTime.getTime() - session.startedAt.getTime()) / 1000);
+      const durationInSeconds = Math.floor(
+        (endTime.getTime() - session.startedAt.getTime()) / 1000
+      );
 
       session.status = "completed";
       session.endedAt = endTime;
       session.durationInSeconds = durationInSeconds;
-      session.creditsUsed = 1;
-
-      user.interviewCredits = Math.max(0, user.interviewCredits - 1);
+      session.creditsUsed = session.creditsUsed ?? 1;
 
       await transactionalEntityManager.save(session);
-      await transactionalEntityManager.save(user);
     });
   }
 
@@ -193,7 +205,9 @@ export class InterviewService {
     const interviewRepository = AppDataSource.getRepository(Interview);
     const sessionRepository = AppDataSource.getRepository(InterviewSession);
 
-    const interview = await interviewRepository.findOne({ where: { id: interviewId } });
+    const interview = await interviewRepository.findOne({
+      where: { id: interviewId },
+    });
     const sessions = await sessionRepository.find({
       where: { interviewId },
       order: { createdAt: "DESC" },
@@ -221,7 +235,9 @@ export class InterviewService {
     const interviewRepository = AppDataSource.getRepository(Interview);
     const sessionRepository = AppDataSource.getRepository(InterviewSession);
 
-    const totalInterviews = await interviewRepository.count({ where: { userId } });
+    const totalInterviews = await interviewRepository.count({
+      where: { userId },
+    });
     const allSessions = await sessionRepository.find({ where: { userId } });
 
     const totalSessions = allSessions.length;
@@ -248,17 +264,19 @@ export class InterviewService {
     };
   }
 
-  async getQuestionsBySession(sessionId: string): Promise<InterviewPromptDto[]> {
+  async getQuestionsBySession(
+    sessionId: string
+  ): Promise<InterviewPromptDto[]> {
     const repository = AppDataSource.getRepository(InterviewPrompt);
 
-    console.log('Fetching questions for sessionId:', sessionId); // Debug log
+    console.log("Fetching questions for sessionId:", sessionId);
 
     const prompts = await repository.find({
       where: { sessionId },
       order: { createdAt: "ASC" },
     });
 
-    console.log('Found prompts:', prompts.length); // Debug log
+    console.log("Found prompts:", prompts.length);
 
     return prompts.map((p) => ({
       id: p.id,
@@ -268,20 +286,22 @@ export class InterviewService {
     }));
   }
 
-  // ✅ Add this new method to get questions from session data as fallback
-  async getQuestionsFromSessionData(sessionId: string): Promise<InterviewPromptDto[]> {
+  async getQuestionsFromSessionData(
+    sessionId: string
+  ): Promise<InterviewPromptDto[]> {
     const sessionRepository = AppDataSource.getRepository(InterviewSession);
-    
-    const session = await sessionRepository.findOne({ where: { id: sessionId } });
+
+    const session = await sessionRepository.findOne({
+      where: { id: sessionId },
+    });
     if (!session || !session.sessionData) {
       return [];
     }
 
     const { questions, answers } = session.sessionData;
-    
-    // Combine questions and answers based on timestamp or index
+
     const combined: InterviewPromptDto[] = [];
-    
+
     for (let i = 0; i < Math.min(questions.length, answers.length); i++) {
       combined.push({
         id: answers[i].promptId || `temp-${i}`,

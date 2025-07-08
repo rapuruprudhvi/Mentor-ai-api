@@ -5,6 +5,7 @@ import { User } from "../entity/user.entity";
 import { resetPasswordSchema, UserResponse } from "../dto/auth.validation";
 import { ApiResponse } from "../types/api.responce";
 import { UserService } from "../service/user.service";
+import { verifyRecaptcha } from "../utils/recaptcha.utilis";
 
 @Injectable()
 export class ResetPasswordHandler implements RouteHandler {
@@ -25,6 +26,17 @@ export class ResetPasswordHandler implements RouteHandler {
     if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
+
+    if (!body.recaptchaToken) {
+      return res.status(400).json({ error: "reCAPTCHA token is required" });
+    }
+
+    const isHuman = await verifyRecaptcha(body.recaptchaToken);
+
+    if (!isHuman) {
+      return res.status(403).json({ error: "reCAPTCHA verification failed" });
+    }
+
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res.status(400).json({ error: "Missing token" });
