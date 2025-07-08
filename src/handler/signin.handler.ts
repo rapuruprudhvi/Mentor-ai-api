@@ -47,7 +47,6 @@ export class SigninHandler implements RouteHandler {
     //   });
     // }
     const token = generateToken({ id: user.id, email: user.email });
-
     const response = {
       message: 'User signed in successfully',
       token,
