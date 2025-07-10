@@ -12,7 +12,7 @@ export class SigninHandler implements RouteHandler {
   constructor(private readonly userService: UserService) { }
   async handle(
     req: Request,
-    res: Response<ApiResponse<{ token: string, user: UserResponse }>>,) {
+    res: Response<ApiResponse<{ user: UserResponse }>>,) {
     const { error, data: body } = signinSchema.safeParse(req.body);
     if (error) {
       res.status(400).json({
@@ -47,10 +47,15 @@ export class SigninHandler implements RouteHandler {
     //   });
     // }
     const token = generateToken({ id: user.id, email: user.email });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     const response = {
       message: 'User signed in successfully',
-      token,
       user: {
         id: user.id,
         name: user.name,
