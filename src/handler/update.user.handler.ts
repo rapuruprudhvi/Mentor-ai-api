@@ -31,16 +31,19 @@ export class UpdateUserHandler implements RouteHandler {
       return res.status(400).json({ error: error.errors[0].message });
     }
 
-    if (!updates.recaptchaToken) {
-      return res.status(400).json({ error: "reCAPTCHA token is required" });
+    const isUpdatingPassword = updates.currentPassword || updates.changePassword || updates.confirmPassword;
+
+    if (isUpdatingPassword) {
+      if (!updates.recaptchaToken) {
+        return res.status(400).json({ error: "reCAPTCHA token is required" });
+      }
+
+      const isHuman = await verifyRecaptcha(updates.recaptchaToken);
+
+      if (!isHuman) {
+        return res.status(403).json({ error: "reCAPTCHA verification failed" });
+      }
     }
-
-    const isHuman = await verifyRecaptcha(updates.recaptchaToken);
-
-    if (!isHuman) {
-      return res.status(403).json({ error: "reCAPTCHA verification failed" });
-    }
-
     const updatedUser = await this.userService.updateUser(params.userId, updates);
 
     return res.status(200).json({

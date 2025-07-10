@@ -12,6 +12,7 @@ import * as http from "http";
 import express, { Request, Response } from "express";
 import passport from "passport";
 import Container from "typedi";
+import cookieParser from "cookie-parser";
 
 import { passportStrategy } from "./config/passport";
 import { ErrorMiddleware } from "./middleware/error.middleware";
@@ -23,12 +24,15 @@ import interviewsRouter from "./router/interview.router";
 
 export const createApp = (): http.Server => {
   const app = express();
+  app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  }));
+  app.use(cookieParser());
   app.use(helmet());
   app.use(compression());
-  app.use(cors());
-  app.use(urlencoded({ extended: true }));
-  app.use(json());
   app.use(express.json());
+  app.use(urlencoded({ extended: true }));
 
   morgan.token("headers", (req: Request) => {
     const kv: string[] = [];
@@ -62,7 +66,7 @@ export const createApp = (): http.Server => {
   app.use("/api/payments", paymentRouter);
   app.use("/api/interview-prompts", interviewPromptsRouter);
   app.use("/api/interview", interviewsRouter);
-  
+
 
   const globalErrorHandler = Container.get(ErrorMiddleware);
   app.use(globalErrorHandler.handle.bind(globalErrorHandler));
