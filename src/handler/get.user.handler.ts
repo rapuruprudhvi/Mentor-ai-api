@@ -27,8 +27,10 @@ export class GetUserHandler implements RouteHandler {
       name: dbUser.name,
       email: dbUser.email,
       mobileNumber: dbUser.mobileNumber,
-      interviewCredits:dbUser.interviewCredits,
+      resume: dbUser.resume,
+      interviewCredits: dbUser.interviewCredits,
       role: dbUser.role || "",
+
       createdAt: dbUser.createdAt,
     };
     return res.status(200).json({ data: userResponse });

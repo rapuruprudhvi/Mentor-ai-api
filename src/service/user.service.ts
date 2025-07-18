@@ -191,6 +191,12 @@ export class UserService {
     return user;
   }
 
+    async updateUserResume(userId: string, resumePath: string) {
+    const userRepo = this.dataSource.getRepository(User);
+    await userRepo.update({ id: userId }, { resume: resumePath });
+  }
+
+
   async deleteUser(userId: string) {
     const user = await this.getUserById(userId);
     if (!user) throw new Error("User not found");
@@ -228,3 +234,4 @@ export class UserService {
     return { ticket, user };
   }
 }
+

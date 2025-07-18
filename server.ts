@@ -1,5 +1,5 @@
 // server.ts
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 dotenv.config();
 
 import { createServer } from "http";
@@ -15,7 +15,7 @@ const server = createServer(app);
 // WebSocket for audio
 const wss = new WebSocketServer({
   server,
-  path: "/audio"
+  path: "/audio",
 });
 
 const audioChunks = new Map<WebSocket, Buffer[]>();
@@ -66,7 +66,9 @@ async function processAudioChunks(ws: WebSocket) {
     audioChunks.set(ws, []);
   } catch (error) {
     console.error("Error processing audio:", error);
-    ws.send(JSON.stringify({ type: "error", message: "Failed to process audio" }));
+    ws.send(
+      JSON.stringify({ type: "error", message: "Failed to process audio" })
+    );
   }
 }
 
@@ -77,12 +79,12 @@ const startServer = async () => {
 
     Container.set(DataSource, AppDataSource);
 
-    const PORT = process.env.PORT || 4000;
+    const PORT = Number(process.env.PORT) || 4000;
 
     const app = createApp();
 
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
     console.error("❌ Error starting server:", error);
