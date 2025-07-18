@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Entity,
   Column,
   CreateDateColumn,
@@ -14,7 +15,7 @@ export enum TicketStatus {
 }
 
 @Entity()
-export class SupportTicket {
+export class SupportTicket extends BaseEntity {
   @Index()
   @PrimaryColumn()
   id: string;

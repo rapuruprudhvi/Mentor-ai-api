@@ -1,7 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { BaseEntity, Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
 
 @Entity()
-export class Interview {
+export class Interview extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id: string
 
@@ -9,7 +9,7 @@ export class Interview {
   title: string
 
   @Column("uuid")
-  userId: string 
+  userId: string
 
   @CreateDateColumn()
   createdAt: Date
