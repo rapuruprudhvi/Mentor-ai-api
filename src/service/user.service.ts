@@ -1,17 +1,19 @@
-import { ulid } from "ulid";
-import bcrypt from "bcrypt";
-import { User } from "../entity/user.entity";
+import { ulid } from 'ulid';
+import bcrypt from 'bcrypt';
+import { User } from '../entity/user.entity';
 import { Injectable } from "../decorator/injectable.decorator";
-import { DataSource } from "typeorm";
-import { BlacklistedToken } from "../entity/blacklisted-token.entity";
+import { DataSource } from 'typeorm';
+import { BlacklistedToken } from '../entity/blacklisted-token.entity';
 import { generateOTP } from "../utils/otp.utils";
 import { isEmail, sendVerificationEmail } from "../utils/mail.utils";
-import { isMobile, sendOtpToMobile } from "../utils/sms.utils";
-import { UpdateUserInput } from "../dto/auth.validation";
-import { Payment } from "../entity/payment.entity";
-import { Interview } from "../entity/interview.entity";
-import { InterviewSession } from "../entity/interview.session.entity";
-import { InterviewPrompt } from "../entity/InterviewPrompt";
+import { isMobile, sendOtpToMobile } from '../utils/sms.utils';
+import { CreateTicketSchema, UpdateUserInput } from '../dto/auth.validation';
+import { Payment } from '../entity/payment.entity';
+import { Interview } from '../entity/interview.entity';
+import { InterviewSession } from '../entity/interview.session.entity';
+import { InterviewPrompt } from '../entity/InterviewPrompt';
+import { SupportTicket } from '../entity/support.ticket.entity';
+
 
 type OtpEntry = {
   otp: string;
@@ -22,14 +24,9 @@ const otpStore = new Map<string, OtpEntry>();
 
 @Injectable()
 export class UserService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(private readonly dataSource: DataSource) { }
 
-  async userSignUp(
-    name: string,
-    email: string,
-    mobileNumber: string,
-    password: string
-  ) {
+  async userSignUp(name: string, email: string, mobileNumber: string, password: string) {
     const userRepo = this.dataSource.getRepository(User);
     const existingEmail = await this.getUserByEmail(email);
 
@@ -38,6 +35,7 @@ export class UserService {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
 
     return userRepo.save({
       id: ulid(),
@@ -52,9 +50,7 @@ export class UserService {
   }
 
   async userSignIn(identifier: string, password: string) {
-    const user =
-      (await this.getUserByEmail(identifier)) ||
-      (await this.getUserByNumber(identifier));
+    const user = (await this.getUserByEmail(identifier)) || (await this.getUserByNumber(identifier));
 
     if (!user) {
       throw new Error("User not found");
@@ -100,9 +96,7 @@ export class UserService {
   }
 
   async sendOtp(contact: string) {
-    const user =
-      (await this.getUserByEmail(contact)) ||
-      (await this.getUserByNumber(contact));
+    const user = (await this.getUserByEmail(contact)) || (await this.getUserByNumber(contact));
     if (!user) throw new Error("User not found");
 
     const otp = generateOTP();
@@ -141,10 +135,7 @@ export class UserService {
     if (isEmail(contact)) {
       await userRepo.update({ email: contact }, { emailVerified: true });
     } else if (isMobile(contact)) {
-      await userRepo.update(
-        { mobileNumber: contact },
-        { mobileNumberVerified: true }
-      );
+      await userRepo.update({ mobileNumber: contact }, { mobileNumberVerified: true });
     } else {
       throw new Error("Invalid contact identifier");
     }
@@ -177,22 +168,15 @@ export class UserService {
 
   async updateUser(userId: string, updates: UpdateUserInput) {
     const userRepo = this.dataSource.getRepository(User);
-    const user = await this.getUserById(userId);
+    const user = await this.getUserById(userId)
     if (!user) throw new Error("User not found");
 
     if (updates.currentPassword && updates.changePassword) {
-      const isSame = await bcrypt.compare(
-        updates.currentPassword,
-        user.password
-      );
+      const isSame = await bcrypt.compare(updates.currentPassword, user.password);
       if (!isSame) throw new Error("Current password is incorrect");
 
-      const isIdentical = await bcrypt.compare(
-        updates.changePassword,
-        user.password
-      );
-      if (isIdentical)
-        throw new Error("New password must be different from current password");
+      const isIdentical = await bcrypt.compare(updates.changePassword, user.password);
+      if (isIdentical) throw new Error("New password must be different from current password");
 
       user.password = await bcrypt.hash(updates.changePassword, 10);
     }
@@ -201,14 +185,17 @@ export class UserService {
     if (updates.email) user.email = updates.email;
     if (updates.mobileNumber) user.mobileNumber = updates.mobileNumber;
     if (updates.role) user.role = updates.role;
+    if (updates.profilePhoto) user.profilePicture = updates.profilePhoto;
 
     await userRepo.save(user);
     return user;
   }
-  async updateUserResume(userId: string, resumePath: string) {
+
+    async updateUserResume(userId: string, resumePath: string) {
     const userRepo = this.dataSource.getRepository(User);
     await userRepo.update({ id: userId }, { resume: resumePath });
   }
+
 
   async deleteUser(userId: string) {
     const user = await this.getUserById(userId);
@@ -222,4 +209,29 @@ export class UserService {
       await manager.getRepository(User).delete({ id: userId });
     });
   }
+
+  async createSupportTicket(data: CreateTicketSchema, userId: string) {
+    const ticketRepo = this.dataSource.getRepository(SupportTicket);
+
+    const ticket = ticketRepo.create({
+      id: ulid(),
+      ...data,
+      userId,
+    });
+    return await ticketRepo.save(ticket);
+  }
+
+  async getSupportTicketWithUser(ticketId: string) {
+    const ticketRepo = this.dataSource.getRepository(SupportTicket);
+    const userRepo = this.dataSource.getRepository(User);
+
+    const ticket = await ticketRepo.findOneBy({ id: ticketId });
+    if (!ticket) return null;
+
+    const user = await userRepo.findOneBy({ id: ticket.userId });
+    if (!user) return null;
+
+    return { ticket, user };
+  }
 }
+

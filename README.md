@@ -107,7 +107,8 @@ More test cards: Stripe Docs → Test Cards
 ### 📁 5. Start Server
 
 ```bash
-npm run dev
+For the run ollama use the       ---npm run dev:ollama
+for the run claude use the       ---npm run dev:claude
 ```
 
 You can access API at `http://localhost:4000`
@@ -124,6 +125,8 @@ To configure email functionality, you need to set up the following environment v
 ```env
 SMTP_EMAIL=your_email@example.com
 SMTP_PASSWORD=your_gmail_app_password
+DEVELOPER_RECEIVER="Enter the developers email"
+FRONTEND_URL="enter the your frontend url"
 ```
 steps to generate Gmail App Password:
 1. Go to your Google Account.(https://myaccount.google.com/)

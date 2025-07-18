@@ -88,31 +88,47 @@ export class PaymentService {
     const userRepository = AppDataSource.getRepository(User);
     const paymentRepository = AppDataSource.getRepository(Payment);
 
-    await AppDataSource.transaction(async (transactionalEntityManager) => {
-      const user = await transactionalEntityManager.findOne(User, {
-        where: { id: userId },
+    try {
+      const paymentIntent = await this.stripe.paymentIntents.retrieve(
+        session.payment_intent as string,
+        { expand: ["latest_charge"] }
+      );
+
+      const paymentMethod = paymentIntent.payment_method as string;
+      const receiptUrl =
+        (paymentIntent.latest_charge as any)?.receipt_url || null;
+
+      await AppDataSource.transaction(async (transactionalEntityManager) => {
+        const user = await transactionalEntityManager.findOne(User, {
+          where: { id: userId },
+        });
+        if (!user) {
+          throw new Error("User not found");
+        }
+
+        user.interviewCredits += credits;
+        await transactionalEntityManager.save(user);
+
+        const payment = new Payment();
+        payment.stripeSessionId = session.id;
+        payment.stripePaymentIntentId = session.payment_intent as string;
+        payment.amount = session.amount_total
+          ? session.amount_total / 100
+          : plan.amount / 100;
+        payment.currency = plan.currency;
+        payment.planType = planId;
+        payment.interviewCredits = credits;
+        payment.status = "completed";
+        payment.userId = user.id;
+        payment.paymentMethod = paymentMethod;
+        payment.receiptUrl = receiptUrl;
+
+        await transactionalEntityManager.save(payment);
       });
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      user.interviewCredits += credits;
-      await transactionalEntityManager.save(user);
-
-      const payment = new Payment();
-      payment.stripeSessionId = session.id;
-      payment.stripePaymentIntentId = session.payment_intent as string;
-      payment.amount = session.amount_total
-        ? session.amount_total / 100
-        : plan.amount / 100;
-      payment.currency = plan.currency;
-      payment.planType = planId;
-      payment.interviewCredits = credits;
-      payment.status = "completed";
-      payment.userId = user.id;
-
-      await transactionalEntityManager.save(payment);
-    });
+    } catch (error) {
+      console.error("Error processing payment completion:", error);
+      throw error;
+    }
   }
 
   verifyWebhookSignature(body: Buffer, signature: string): Stripe.Event {

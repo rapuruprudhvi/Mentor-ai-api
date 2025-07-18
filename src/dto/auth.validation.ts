@@ -24,7 +24,10 @@ export const signupSchema = z
 
     confirmPassword: z
       .string()
+
       .min(6, "Confirm password must be at least 6 characters"),
+
+    recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -45,6 +48,7 @@ export const signinSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters")
     .max(50, "Password must be less than 50 characters"),
+  recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
 });
 
 export type SigninInput = z.infer<typeof signinSchema>;
@@ -88,6 +92,7 @@ export type OtpSchema = z.infer<typeof otpSchema>;
 
 export const requestPasswordResetSchema = z.object({
   email: z.string().email("Invalid email"),
+  recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
 });
 
 export const resetPasswordSchema = z
@@ -96,6 +101,7 @@ export const resetPasswordSchema = z
     confirmPassword: z
       .string()
       .min(6, "Confirm password must be at least 6 characters"),
+    recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -119,7 +125,7 @@ export const updateUserSchema = z
       .length(10, "Mobile number must be exactly 10 digits")
       .optional(),
     role: z.string().optional(),
-    resume: z.string().optional(),
+    profilePhoto: z.string().optional(),
     currentPassword: z
       .string()
       .min(6, "Current password must be at least 6 characters")
@@ -132,32 +138,71 @@ export const updateUserSchema = z
       .string()
       .min(6, "Confirm password must be at least 6 characters")
       .optional(),
+    recaptchaToken: z.string().min(1, "reCAPTCHA token is required").optional(),
   })
-  .refine(
-    (data) => {
-      const anyPasswordField =
-        data.currentPassword || data.changePassword || data.confirmPassword;
-      const allProvided =
-        data.currentPassword && data.changePassword && data.confirmPassword;
-      return !anyPasswordField || allProvided;
-    },
-    {
-      message:
-        "All password fields (current, new, confirm) are required to change password",
-      path: ["currentPassword"],
+  .superRefine((data, ctx) => {
+    const isUpdatingPassword = !!(
+      data.currentPassword ||
+      data.changePassword ||
+      data.confirmPassword
+    );
+
+    // Validate all password fields are provided
+    if (
+      isUpdatingPassword &&
+      (!data.currentPassword || !data.changePassword || !data.confirmPassword)
+    ) {
+      ctx.addIssue({
+        path: ["confirmPassword"],
+        code: z.ZodIssueCode.custom,
+        message:
+          "All password fields (current, new, confirm) are required to change password",
+      });
     }
-  )
-  .refine(
-    (data) => {
-      if (data.changePassword && data.confirmPassword) {
-        return data.changePassword === data.confirmPassword;
-      }
-      return true;
-    },
-    {
-      message: "Passwords do not match",
-      path: ["confirmPassword"],
+
+    // Validate new password and confirm password match
+    if (
+      data.changePassword &&
+      data.confirmPassword &&
+      data.changePassword !== data.confirmPassword
+    ) {
+      ctx.addIssue({
+        path: ["confirmPassword"],
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match",
+      });
     }
-  );
+
+    // Validate reCAPTCHA token if updating password
+    if (isUpdatingPassword && !data.recaptchaToken) {
+      ctx.addIssue({
+        path: ["recaptchaToken"],
+        code: z.ZodIssueCode.custom,
+        message: "reCAPTCHA token is required",
+      });
+    }
+  });
 
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+
+export const createTicketSchema = z.object({
+  subject: z.string().min(3).max(100),
+  message: z.string().min(10),
+});
+export type CreateTicketSchema = z.infer<typeof createTicketSchema>;
+
+export interface SupportTicketViewResponse {
+  ticket: {
+    id: string;
+    subject: string;
+    message: string;
+    status: string;
+    createdAt: Date;
+  };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    mobileNumber?: string;
+  };
+}
