@@ -1,7 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { BaseEntity, Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
 
 @Entity()
-export class Payment {
+export class Payment extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id: string
 
@@ -27,7 +27,7 @@ export class Payment {
   status: string
 
   @Column({ nullable: true })
-  paymentMethod: string 
+  paymentMethod: string
 
   @Column({ nullable: true })
   receiptUrl: string
@@ -36,7 +36,7 @@ export class Payment {
   metadata: Record<string, any>
 
   @Column("uuid")
-  userId: string 
+  userId: string
 
   @CreateDateColumn()
   createdAt: Date

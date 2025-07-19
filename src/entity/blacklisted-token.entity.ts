@@ -1,7 +1,7 @@
-import { Entity, Column, CreateDateColumn, PrimaryColumn } from "typeorm";
+import { BaseEntity, Entity, Column, CreateDateColumn, PrimaryColumn } from "typeorm";
 
 @Entity()
-export class BlacklistedToken {
+export class BlacklistedToken extends BaseEntity {
   @PrimaryColumn()
   id: string;
 

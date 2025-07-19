@@ -7,6 +7,4 @@ import { SupportTicket } from "./support.ticket.entity";
 import { User } from "./user.entity";
 import { Resume } from "./resume.entity";
 
-
-export const entities = [ User, BlacklistedToken, Interview, Payment,InterviewPrompt, InterviewSession, SupportTicket, Resume];
-
+export const entities = [ User, BlacklistedToken, Interview, Payment, InterviewPrompt, InterviewSession, SupportTicket, Resume];
