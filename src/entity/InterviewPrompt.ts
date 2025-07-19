@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Entity,
   PrimaryColumn,
   Column,
@@ -6,7 +7,7 @@ import {
 } from "typeorm";
 
 @Entity({ schema: "interview" })
-export class InterviewPrompt {
+export class InterviewPrompt extends BaseEntity {
   @PrimaryColumn({ type: "char", length: 26 })
   id: string;
 
@@ -17,9 +18,9 @@ export class InterviewPrompt {
   answer: string;
 
   @Column("uuid")
-  userId: string; 
+  userId: string;
 
-  @Column("uuid") 
+  @Column("uuid")
   sessionId: string;
 
 

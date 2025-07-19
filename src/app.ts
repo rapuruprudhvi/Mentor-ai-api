@@ -15,6 +15,7 @@ import passport from "passport";
 import Container from "typedi";
 import cookieParser from "cookie-parser";
 
+import { setupAdmin } from './config/adminjs';
 import { passportStrategy } from "./config/passport";
 import { ErrorMiddleware } from "./middleware/error.middleware";
 import { logger } from "./config/logger.config";
@@ -30,7 +31,7 @@ const highlightConfig = {
   environment: process.env.NODE_ENV || 'development',
 };
 
-export const createApp = (): http.Server => {
+export const createApp = async (): Promise<http.Server> => {
   const app = express();
   app.use(cors({
     origin: process.env.FRONTEND_URL,
@@ -38,7 +39,6 @@ export const createApp = (): http.Server => {
   }));
   app.use(cookieParser());
   app.use(Handlers.middleware(highlightConfig));
-  app.use(helmet());
   app.use(compression());
   app.use(express.json());
   app.use(urlencoded({ extended: true }));
@@ -64,6 +64,9 @@ export const createApp = (): http.Server => {
 
   passportStrategy(passport);
   app.use(passport.initialize());
+
+  const { admin, adminRouter } = await setupAdmin()
+  app.use(admin.options.rootPath, adminRouter);
 
   app.use("/api", openApiRouter);
   app.use("/api/auth", authRouter);
